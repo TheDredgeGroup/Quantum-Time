@@ -1,92 +1,395 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>Quantum Time - Weekly Time Card (Fixed)</title>
-    <meta name="description" content="Quantum Time - Weekly Time Card App (iPhone & Android fixes)" />
-    <meta name="theme-color" content="#4CAF50" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <meta name="apple-mobile-web-app-title" content="Quantum Time" />
-
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Quantum Time - Weekly Time Card</title>
+    
+    <meta name="description" content="Quantum Time - Weekly Time Card App">
+    <meta name="theme-color" content="#4CAF50">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Quantum Time">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
 
-    <!-- Attempt to load jsPDF from CDN first, fallback to local file 'jspdf.umd.min.js' when CDN is blocked.
-         For true offline use: download jspdf.umd.min.js and place it next to this HTML file. -->
-    <script>
-        (function() {
-            // Dynamically insert script tag to load jspdf CDN; if it fails (e.g. file:// restrictions),
-            // we try to load a local copy 'jspdf.umd.min.js' (you must download that file manually).
-            function loadScript(src, onload, onerror) {
-                var s = document.createElement('script');
-                s.src = src;
-                s.onload = onload;
-                s.onerror = onerror;
-                document.head.appendChild(s);
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            background: #f5f5f5;
+            padding: 10px;
+        }
+
+        .app-container {
+            max-width: 100%;
+            margin: 0 auto;
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #333;
+        }
+
+        .header h1 {
+            font-size: 20px;
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .top-section {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .input-group label {
+            font-weight: bold;
+            font-size: 12px;
+            color: #333;
+        }
+
+        .input-group input {
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .table-container {
+            overflow-x: auto;
+            margin-bottom: 15px;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 11px;
+        }
+
+        th, td {
+            border: 1px solid #333;
+            padding: 6px 4px;
+            text-align: center;
+        }
+
+        th {
+            background: #e0e0e0;
+            font-weight: bold;
+        }
+
+        .day-cell {
+            font-weight: bold;
+            background: #f0f0f0;
+            min-width: 70px;
+            padding: 8px 4px !important;
+        }
+
+        .day-cell-content {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+            flex-wrap: nowrap;
+        }
+
+        .add-row-btn {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 22px;
+            height: 22px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            line-height: 1;
+            flex-shrink: 0;
+        }
+
+        .add-row-btn:active {
+            background: #45a049;
+        }
+
+        .remove-row-btn {
+            background: #f44336;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            line-height: 1;
+        }
+
+        .remove-row-btn:active {
+            background: #da190b;
+        }
+
+        .additional-row .day-cell {
+            background: #f8f8f8;
+        }
+
+        input[type="text"], input[type="number"], input[type="time"] {
+            width: 100%;
+            padding: 4px;
+            border: 1px solid #ccc;
+            border-radius: 2px;
+            font-size: 11px;
+            -webkit-appearance: none;
+        }
+
+        .vehicle-section {
+            margin-bottom: 15px;
+            padding: 10px;
+            background: #f9f9f9;
+            border-radius: 4px;
+            font-size: 11px;
+        }
+
+        .vehicle-question {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+            flex-wrap: wrap;
+        }
+
+        .vehicle-question label {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .radio-group {
+            display: flex;
+            gap: 15px;
+        }
+
+        .radio-group label {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            cursor: pointer;
+        }
+
+        .totals-row {
+            background: #fffacd;
+            font-weight: bold;
+        }
+
+        .buttons-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        button {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            -webkit-appearance: none;
+        }
+
+        .btn-primary {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .btn-secondary {
+            background: #2196F3;
+            color: white;
+        }
+
+        .btn-danger {
+            background: #f44336;
+            color: white;
+        }
+
+        .btn-warning {
+            background: #ff9800;
+            color: white;
+        }
+
+        .template-section {
+            margin-top: 20px;
+            padding: 15px;
+            background: #e3f2fd;
+            border-radius: 4px;
+        }
+
+        .template-section h3 {
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+
+        .template-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .template-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px;
+            background: white;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+        }
+
+        .template-item button {
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+
+        .acknowledgment {
+            font-size: 9px;
+            margin-top: 15px;
+            padding: 10px;
+            background: #f9f9f9;
+            border-radius: 4px;
+        }
+
+        .signature-section {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f9f9f9;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+            position: relative;
+        }
+
+        .signature-section h3 {
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+
+        .signature-container {
+            border: 2px solid #333;
+            border-radius: 4px;
+            background: white;
+            touch-action: none;
+            position: relative;
+            width: 100%;
+            height: 120px;
+            overflow: hidden;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
+        #signatureCanvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            touch-action: none;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+
+        body.signing {
+            overflow: hidden;
+            position: fixed;
+            width: 100%;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            max-width: 90%;
+            width: 400px;
+        }
+
+        .modal-content h3 {
+            margin-bottom: 15px;
+        }
+
+        .modal-content input {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        @media (max-width: 600px) {
+            table {
+                font-size: 9px;
+            }
+            
+            th, td {
+                padding: 4px 2px;
             }
 
-            var cdn = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
-            loadScript(cdn,
-                function(){ console.log('jsPDF loaded from CDN.'); },
-                function(){
-                    console.warn('Failed to load jsPDF from CDN. Trying local ./jspdf.umd.min.js');
-                    loadScript('./jspdf.umd.min.js', function(){ console.log('jsPDF loaded from local file.'); }, function(){ console.error('Failed to load local jsPDF. PDF features will be disabled.'); });
-                }
-            );
-        })();
-    </script>
-
-    <style>
-        * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color: transparent; }
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; background:#f5f5f5; padding:10px; -webkit-font-smoothing:antialiased; -webkit-text-size-adjust:100%; }
-        .app-container { max-width:100%; margin:0 auto; background:white; padding:15px; border-radius:8px; box-shadow:0 2px 10px rgba(0,0,0,0.1); }
-        .header { text-align:center; margin-bottom:20px; padding-bottom:15px; border-bottom:2px solid #333; }
-        .header h1 { font-size:20px; color:#333; margin-bottom:10px; }
-        .top-section { display:grid; grid-template-columns: 1fr; gap:10px; margin-bottom:15px; }
-        .input-group { display:flex; flex-direction:column; gap:5px; }
-        .input-group label { font-weight:bold; font-size:12px; color:#333; }
-        .input-group input { padding:8px; border:1px solid #ccc; border-radius:4px; font-size:14px; }
-        .table-container { overflow-x:auto; margin-bottom:15px; -webkit-overflow-scrolling: touch; }
-        table { width:100%; border-collapse:collapse; font-size:11px; }
-        th, td { border:1px solid #333; padding:6px 4px; text-align:center; }
-        th { background:#e0e0e0; font-weight:bold; }
-        .day-cell { font-weight:bold; background:#f0f0f0; min-width:70px; padding:8px 4px !important; }
-        .day-cell-content { display:flex; align-items:center; justify-content:center; gap:5px; flex-wrap:nowrap; }
-        .add-row-btn, .remove-row-btn { -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
-        .add-row-btn { background:#4CAF50; color:white; border:none; border-radius:50%; width:22px; height:22px; font-size:18px; font-weight:bold; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; padding:0; line-height:1; flex-shrink:0; }
-        .remove-row-btn { background:#f44336; color:white; border:none; border-radius:50%; width:18px; height:18px; font-size:14px; font-weight:bold; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; padding:0; line-height:1; }
-        .additional-row .day-cell { background:#f8f8f8; }
-        input[type="text"], input[type="number"], input[type="time"], input[type="date"] { width:100%; padding:4px; border:1px solid #ccc; border-radius:2px; font-size:11px; -webkit-appearance:none; }
-        .vehicle-section { margin-bottom:15px; padding:10px; background:#f9f9f9; border-radius:4px; font-size:11px; }
-        .vehicle-question { display:flex; align-items:center; gap:10px; margin-bottom:8px; flex-wrap:wrap; }
-        .vehicle-question label { flex:1; min-width:200px; }
-        .radio-group { display:flex; gap:15px; }
-        .totals-row { background:#fffacd; font-weight:bold; }
-        .buttons-container { display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-top:20px; }
-        button { padding:12px 20px; border:none; border-radius:4px; font-size:14px; font-weight:bold; cursor:pointer; -webkit-appearance:none; appearance:none; touch-action:manipulation; }
-        .btn-primary { background:#4CAF50; color:white; }
-        .btn-secondary { background:#2196F3; color:white; }
-        .btn-danger { background:#f44336; color:white; }
-        .btn-warning { background:#ff9800; color:white; }
-        .template-section { margin-top:20px; padding:15px; background:#e3f2fd; border-radius:4px; }
-        .template-list { display:flex; flex-direction:column; gap:8px; margin-bottom:10px; }
-        .template-item { display:flex; justify-content:space-between; align-items:center; padding:8px; background:white; border-radius:4px; border:1px solid #ccc; }
-        .acknowledgment { font-size:9px; margin-top:15px; padding:10px; background:#f9f9f9; border-radius:4px; }
-        .signature-section { margin-top:20px; padding:15px; background:#f9f9f9; border-radius:4px; border:1px solid #ddd; position:relative; }
-        .signature-section h3 { font-size:14px; margin-bottom:10px; }
-        .signature-container { border:2px solid #333; border-radius:4px; background:white; touch-action:none; position:relative; width:100%; height:120px; overflow:hidden; -webkit-user-select:none; user-select:none; }
-        #signatureCanvas { display:block; position:absolute; top:0; left:0; width:100%; height:100%; touch-action:none; }
-        #typedSignatureDisplay { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); font-family:'Dancing Script','Brush Script MT','Lucida Handwriting',cursive; font-size:56px; color:#000; font-weight:600; pointer-events:none; white-space:nowrap; z-index:10; width:100%; text-align:center; }
-        body.signing { overflow:hidden; position:fixed; width:100%; }
-        .modal { display:none; position:fixed; z-index:1000; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.5); align-items:center; justify-content:center; }
-        .modal.show { display:flex; }
-        .modal-content { background:white; padding:20px; border-radius:8px; max-width:90%; width:400px; }
-        .modal-buttons { display:flex; gap:10px; }
-        @media (max-width:600px) { table { font-size:9px; } th, td { padding:4px 2px; } input[type="text"], input[type="number"], input[type="time"] { font-size:9px; padding:2px; } }
+            input[type="text"], input[type="number"], input[type="time"] {
+                font-size: 9px;
+                padding: 2px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -121,7 +424,7 @@
                 </div>
                 <div class="vehicle-question">
                     <label>Vehicle #:</label>
-                    <input type="text" id="vehicleNumber" placeholder="Vehicle number" style="flex:1;">
+                    <input type="text" id="vehicleNumber" placeholder="Vehicle number" style="flex: 1;">
                 </div>
                 <div class="vehicle-question">
                     <label>Did you Drive a Co. Vehicle Home for the Period?</label>
@@ -157,7 +460,7 @@
                     </thead>
                     <tbody id="timeTableBody">
                         <tr data-day="Mon">
-                            <td class="day-cell"><div class="day-cell-content"><span>Mon</span><button class="add-row-btn" onclick="addDayRow('Mon'); return false;">+</button></div></td>
+                            <td class="day-cell"><div class="day-cell-content"><span>Mon</span><button class="add-row-btn" onclick="addDayRow('Mon')">+</button></div></td>
                             <td><input type="text" class="job-desc" placeholder="Job"></td>
                             <td><input type="text" class="ticket" placeholder="Ticket"></td>
                             <td><input type="number" class="other-pay" step="0.01" placeholder="0.00"></td>
@@ -169,7 +472,7 @@
                             <td><input type="time" class="clock-out"></td>
                         </tr>
                         <tr data-day="Tues">
-                            <td class="day-cell"><div class="day-cell-content"><span>Tues</span><button class="add-row-btn" onclick="addDayRow('Tues'); return false;">+</button></div></td>
+                            <td class="day-cell"><div class="day-cell-content"><span>Tues</span><button class="add-row-btn" onclick="addDayRow('Tues')">+</button></div></td>
                             <td><input type="text" class="job-desc" placeholder="Job"></td>
                             <td><input type="text" class="ticket" placeholder="Ticket"></td>
                             <td><input type="number" class="other-pay" step="0.01" placeholder="0.00"></td>
@@ -181,7 +484,7 @@
                             <td><input type="time" class="clock-out"></td>
                         </tr>
                         <tr data-day="Wed">
-                            <td class="day-cell"><div class="day-cell-content"><span>Wed</span><button class="add-row-btn" onclick="addDayRow('Wed'); return false;">+</button></div></td>
+                            <td class="day-cell"><div class="day-cell-content"><span>Wed</span><button class="add-row-btn" onclick="addDayRow('Wed')">+</button></div></td>
                             <td><input type="text" class="job-desc" placeholder="Job"></td>
                             <td><input type="text" class="ticket" placeholder="Ticket"></td>
                             <td><input type="number" class="other-pay" step="0.01" placeholder="0.00"></td>
@@ -193,7 +496,7 @@
                             <td><input type="time" class="clock-out"></td>
                         </tr>
                         <tr data-day="Thurs">
-                            <td class="day-cell"><div class="day-cell-content"><span>Thurs</span><button class="add-row-btn" onclick="addDayRow('Thurs'); return false;">+</button></div></td>
+                            <td class="day-cell"><div class="day-cell-content"><span>Thurs</span><button class="add-row-btn" onclick="addDayRow('Thurs')">+</button></div></td>
                             <td><input type="text" class="job-desc" placeholder="Job"></td>
                             <td><input type="text" class="ticket" placeholder="Ticket"></td>
                             <td><input type="number" class="other-pay" step="0.01" placeholder="0.00"></td>
@@ -205,7 +508,7 @@
                             <td><input type="time" class="clock-out"></td>
                         </tr>
                         <tr data-day="Fri">
-                            <td class="day-cell"><div class="day-cell-content"><span>Fri</span><button class="add-row-btn" onclick="addDayRow('Fri'); return false;">+</button></div></td>
+                            <td class="day-cell"><div class="day-cell-content"><span>Fri</span><button class="add-row-btn" onclick="addDayRow('Fri')">+</button></div></td>
                             <td><input type="text" class="job-desc" placeholder="Job"></td>
                             <td><input type="text" class="ticket" placeholder="Ticket"></td>
                             <td><input type="number" class="other-pay" step="0.01" placeholder="0.00"></td>
@@ -217,7 +520,7 @@
                             <td><input type="time" class="clock-out"></td>
                         </tr>
                         <tr data-day="Sat">
-                            <td class="day-cell"><div class="day-cell-content"><span>Sat</span><button class="add-row-btn" onclick="addDayRow('Sat'); return false;">+</button></div></td>
+                            <td class="day-cell"><div class="day-cell-content"><span>Sat</span><button class="add-row-btn" onclick="addDayRow('Sat')">+</button></div></td>
                             <td><input type="text" class="job-desc" placeholder="Job"></td>
                             <td><input type="text" class="ticket" placeholder="Ticket"></td>
                             <td><input type="number" class="other-pay" step="0.01" placeholder="0.00"></td>
@@ -229,7 +532,7 @@
                             <td><input type="time" class="clock-out"></td>
                         </tr>
                         <tr data-day="Sun">
-                            <td class="day-cell"><div class="day-cell-content"><span>Sun</span><button class="add-row-btn" onclick="addDayRow('Sun'); return false;">+</button></div></td>
+                            <td class="day-cell"><div class="day-cell-content"><span>Sun</span><button class="add-row-btn" onclick="addDayRow('Sun')">+</button></div></td>
                             <td><input type="text" class="job-desc" placeholder="Job"></td>
                             <td><input type="text" class="ticket" placeholder="Ticket"></td>
                             <td><input type="number" class="other-pay" step="0.01" placeholder="0.00"></td>
@@ -253,20 +556,22 @@
 
             <div class="signature-section">
                 <h3>Employee Signature</h3>
-                <div style="margin-bottom:10px;">
-                    <label style="font-size:11px; margin-right:10px;">Type Name:</label>
-                    <input type="text" id="typedSignature" placeholder="Type your full name"
-                           style="padding:8px; border:1px solid #ccc; border-radius:4px; width:250px; max-width:100%;"
-                           oninput="updateTypedSignature()" onchange="updateTypedSignature()" onkeyup="updateTypedSignature()">
-                    <button onclick="clearTypedSignature(); return false;" style="padding:8px 12px; font-size:11px; margin-left:5px;" class="btn-secondary">Clear</button>
+                <div style="margin-bottom: 10px;">
+                    <label style="font-size: 11px; margin-right: 10px;">Type Name:</label>
+                    <input type="text" id="typedSignature" placeholder="Type your full name" 
+                           style="padding: 8px; border: 1px solid #ccc; border-radius: 4px; width: 250px;"
+                           oninput="updateTypedSignature()">
+                    <button onclick="clearTypedSignature()" style="padding: 8px 12px; font-size: 11px; margin-left: 5px;" class="btn-secondary">Clear</button>
                 </div>
-                <div class="signature-container" id="signatureContainer">
+                <div class="signature-container">
                     <canvas id="signatureCanvas"></canvas>
-                    <div id="typedSignatureDisplay"></div>
+                    <div id="typedSignatureDisplay" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); 
+                         font-family: 'Dancing Script', 'Brush Script MT', 'Lucida Handwriting', cursive; font-size: 56px; color: #000; 
+                         font-weight: 600; pointer-events: none; white-space: nowrap;"></div>
                 </div>
-                <div style="display:flex; gap:10px; margin-top:10px;">
-                    <button class="btn-secondary" onclick="clearSignature(); return false;" style="padding:8px 16px; font-size:12px;">Clear Canvas</button>
-                    <input type="date" id="signatureDate" placeholder="Date" style="padding:8px; border:1px solid #ccc; border-radius:4px; flex:1;">
+                <div style="display: flex; gap: 10px; margin-top: 10px;">
+                    <button class="btn-secondary" onclick="clearSignature()" style="padding: 8px 16px; font-size: 12px;">Clear Canvas</button>
+                    <input type="date" id="signatureDate" placeholder="Date" style="padding: 8px; border: 1px solid #ccc; border-radius: 4px; flex: 1;">
                 </div>
             </div>
 
@@ -276,13 +581,13 @@
         </div>
 
         <div class="buttons-container">
-            <button class="btn-primary" onclick="saveAsPDF(); return false;">📄 Save as PDF</button>
-            <button class="btn-secondary" onclick="shareViaEmail(); return false;">✉️ Email</button>
-            <button class="btn-warning" onclick="showSaveTemplate(); return false;">💾 Save Template</button>
-            <button class="btn-danger" onclick="clearAll(); return false;">🗑️ Clear All</button>
+            <button class="btn-primary" onclick="saveAsPDF()">📄 Save as PDF</button>
+            <button class="btn-secondary" onclick="shareViaEmail()">✉️ Email</button>
+            <button class="btn-warning" onclick="showSaveTemplate()">💾 Save Template</button>
+            <button class="btn-danger" onclick="clearAll()">🗑️ Clear All</button>
         </div>
 
-        <div id="templateSection" class="template-section" style="display:none;">
+        <div id="templateSection" class="template-section" style="display: none;">
             <h3>Saved Templates</h3>
             <div class="template-list" id="templateList"></div>
         </div>
@@ -293,522 +598,694 @@
             <h3>Save as Template</h3>
             <input type="text" id="templateName" placeholder="Enter template name">
             <div class="modal-buttons">
-                <button class="btn-primary" onclick="confirmSaveTemplate(); return false;">Save</button>
-                <button class="btn-danger" onclick="closeTemplateModal(); return false;">Cancel</button>
+                <button class="btn-primary" onclick="confirmSaveTemplate()">Save</button>
+                <button class="btn-danger" onclick="closeTemplateModal()">Cancel</button>
             </div>
         </div>
     </div>
 
     <script>
-    // -------------------------
-    // Utility & feature flags
-    // -------------------------
-    let canvas, ctx;
-    let isDrawing = false;
-    let lastX = 0, lastY = 0;
-    const DYNAMIC_JS_CHECK_WAIT = 150; // ms
+        // Signature Canvas
+        let canvas, ctx;
+        let isDrawing = false;
+        let lastX = 0;
+        let lastY = 0;
 
-    function supportsLocalStorage() {
-        try {
-            var test = '__qtime_test__';
-            localStorage.setItem(test, test);
-            localStorage.removeItem(test);
-            return true;
-        } catch (e) {
-            return false;
-        }
-    }
-
-    // -------------------------
-    // Signature canvas setup
-    // -------------------------
-    function setupSignatureCanvas() {
-        canvas = document.getElementById('signatureCanvas');
-        if (!canvas) {
-            console.error('Signature canvas not found');
-            return;
-        }
-        const container = document.getElementById('signatureContainer') || canvas.parentElement;
-        ctx = canvas.getContext('2d');
-
-        function resizeAndScale() {
-            // Determine CSS size
-            const cssWidth = Math.max(container.clientWidth, 300);
-            const cssHeight = Math.max(container.clientHeight, 120);
-
-            const dpr = window.devicePixelRatio || 1;
-            canvas.width = Math.round(cssWidth * dpr);
-            canvas.height = Math.round(cssHeight * dpr);
-
-            // Set CSS size (so layout remains stable)
-            canvas.style.width = cssWidth + 'px';
-            canvas.style.height = cssHeight + 'px';
-
-            // Scale drawing to account for DPR
-            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-
-            // Drawing style
+        function setupSignatureCanvas() {
+            canvas = document.getElementById('signatureCanvas');
+            if (!canvas) return;
+            
+            ctx = canvas.getContext('2d');
+            
+            const container = canvas.parentElement;
+            canvas.width = container.offsetWidth;
+            canvas.height = container.offsetHeight;
+            
             ctx.strokeStyle = '#000';
             ctx.lineWidth = 2;
             ctx.lineCap = 'round';
             ctx.lineJoin = 'round';
-            // Clear (to avoid odd artifacts on resize)
-            // do not clear if we plan to preserve existing image - handled elsewhere
+            
+            canvas.addEventListener('mousedown', startDrawing);
+            canvas.addEventListener('mousemove', draw);
+            canvas.addEventListener('mouseup', stopDrawing);
+            canvas.addEventListener('mouseout', stopDrawing);
+            
+            canvas.addEventListener('touchstart', handleTouchStart, {passive: false});
+            canvas.addEventListener('touchmove', handleTouchMove, {passive: false});
+            canvas.addEventListener('touchend', handleTouchEnd, {passive: false});
         }
 
-        // First resize
-        resizeAndScale();
-
-        // Use ResizeObserver when available to handle orientation/layout changes
-        if (window.ResizeObserver) {
-            const ro = new ResizeObserver(() => {
-                // Save existing drawing
-                const imgData = canvas.toDataURL();
-                resizeAndScale();
-                // Restore drawing
-                const img = new Image();
-                img.onload = function() {
-                    ctx.clearRect(0, 0, canvas.width, canvas.height);
-                    ctx.drawImage(img, 0, 0, canvas.width / (window.devicePixelRatio||1), canvas.height / (window.devicePixelRatio||1));
-                };
-                img.src = imgData;
-            });
-            ro.observe(container);
-        } else {
-            // Fallback: window resize
-            window.addEventListener('resize', () => {
-                const imgData = canvas.toDataURL();
-                resizeAndScale();
-                const img = new Image();
-                img.onload = function() {
-                    ctx.clearRect(0, 0, canvas.width, canvas.height);
-                    ctx.drawImage(img, 0, 0, canvas.width / (window.devicePixelRatio||1), canvas.height / (window.devicePixelRatio||1));
-                };
-                img.src = imgData;
-            });
-        }
-
-        // Pointer events (preferred) with touch fallback
-        function getPointFromPointerEvent(e) {
-            const rect = canvas.getBoundingClientRect();
-            const clientX = e.clientX !== undefined ? e.clientX : (e.touches && e.touches[0] && e.touches[0].clientX) || 0;
-            const clientY = e.clientY !== undefined ? e.clientY : (e.touches && e.touches[0] && e.touches[0].clientY) || 0;
-            return { x: clientX - rect.left, y: clientY - rect.top };
-        }
-
-        function startDraw(e) {
-            e.preventDefault();
-            // stop page scroll during signing on mobile
-            document.body.classList.add('signing');
-            document.body.style.touchAction = 'none';
-            const pt = getPointFromPointerEvent(e);
-            lastX = pt.x;
-            lastY = pt.y;
+        function startDrawing(e) {
             isDrawing = true;
+            document.body.classList.add('signing');
+            // Clear typed signature if drawing
             clearTypedSignature();
+            const rect = canvas.getBoundingClientRect();
+            lastX = e.clientX - rect.left;
+            lastY = e.clientY - rect.top;
         }
 
-        function moveDraw(e) {
+        function draw(e) {
             if (!isDrawing) return;
-            e.preventDefault();
-            const pt = getPointFromPointerEvent(e);
+            
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
             ctx.beginPath();
             ctx.moveTo(lastX, lastY);
-            ctx.lineTo(pt.x, pt.y);
+            ctx.lineTo(x, y);
             ctx.stroke();
-            lastX = pt.x;
-            lastY = pt.y;
+            
+            lastX = x;
+            lastY = y;
         }
 
-        function endDraw(e) {
-            if (isDrawing) {
-                e && e.preventDefault();
-                isDrawing = false;
-                document.body.classList.remove('signing');
-                document.body.style.touchAction = '';
-            }
+        function handleTouchStart(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            // Clear typed signature if drawing
+            clearTypedSignature();
+            const touch = e.touches[0];
+            const rect = canvas.getBoundingClientRect();
+            isDrawing = true;
+            document.body.classList.add('signing');
+            lastX = touch.clientX - rect.left;
+            lastY = touch.clientY - rect.top;
         }
 
-        // Try to use Pointer Events where supported
-        if (window.PointerEvent) {
-            canvas.addEventListener('pointerdown', startDraw, { passive: false });
-            canvas.addEventListener('pointermove', moveDraw, { passive: false });
-            canvas.addEventListener('pointerup', endDraw, { passive: false });
-            canvas.addEventListener('pointercancel', endDraw, { passive: false });
-            canvas.addEventListener('lostpointercapture', endDraw, { passive: false });
-        } else {
-            // Touch events
-            canvas.addEventListener('touchstart', function(e){ startDraw(e.touches ? e.touches[0] : e); }, { passive:false });
-            canvas.addEventListener('touchmove', function(e){ moveDraw(e.touches ? e.touches[0] : e); }, { passive:false });
-            canvas.addEventListener('touchend', function(e){ endDraw(e); }, { passive:false });
-            // Mouse fallback
-            canvas.addEventListener('mousedown', startDraw, { passive:false });
-            window.addEventListener('mousemove', moveDraw, { passive:false });
-            window.addEventListener('mouseup', endDraw, { passive:false });
+        function handleTouchMove(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            if (!isDrawing) return;
+            
+            const touch = e.touches[0];
+            const rect = canvas.getBoundingClientRect();
+            const x = touch.clientX - rect.left;
+            const y = touch.clientY - rect.top;
+            
+            ctx.beginPath();
+            ctx.moveTo(lastX, lastY);
+            ctx.lineTo(x, y);
+            ctx.stroke();
+            
+            lastX = x;
+            lastY = y;
         }
 
-        // Expose clearing function
-        window.clearSignature = function() {
+        function handleTouchEnd(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            stopDrawing();
+        }
+
+        function stopDrawing() {
+            isDrawing = false;
+            document.body.classList.remove('signing');
+        }
+
+        function clearSignature() {
             if (ctx && canvas) {
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
             }
-        };
-    }
-
-    function updateTypedSignature() {
-        const typedName = document.getElementById('typedSignature').value;
-        const display = document.getElementById('typedSignatureDisplay');
-        display.textContent = typedName;
-        // If typing, clear the canvas signature
-        if (typedName && ctx && canvas) {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
         }
-    }
 
-    function clearTypedSignature() {
-        document.getElementById('typedSignature').value = '';
-        document.getElementById('typedSignatureDisplay').textContent = '';
-    }
-
-    // -------------------------
-    // Rows & totals
-    // -------------------------
-    function addDayRow(day) {
-        const tbody = document.getElementById('timeTableBody');
-        const dayRows = Array.from(tbody.querySelectorAll('tr[data-day="' + day + '"]'));
-        const lastDayRow = dayRows[dayRows.length - 1];
-
-        const newRow = document.createElement('tr');
-        newRow.setAttribute('data-day', day);
-        newRow.classList.add('additional-row');
-        newRow.innerHTML = `
-            <td class="day-cell"><button class="remove-row-btn" onclick="removeDayRow(this); return false;">−</button></td>
-            <td><input type="text" class="job-desc" placeholder="Job"></td>
-            <td><input type="text" class="ticket" placeholder="Ticket"></td>
-            <td><input type="number" class="other-pay" step="0.01" placeholder="0.00"></td>
-            <td><input type="number" class="reg-hrs" step="0.5" placeholder="0.0"></td>
-            <td><input type="number" class="ot-hrs" step="0.5" placeholder="0.0"></td>
-            <td><input type="time" class="clock-in"></td>
-            <td><input type="time" class="lunch-out"></td>
-            <td><input type="time" class="lunch-in"></td>
-            <td><input type="time" class="clock-out"></td>
-        `;
-        lastDayRow.parentNode.insertBefore(newRow, lastDayRow.nextSibling);
-
-        newRow.querySelectorAll('.other-pay, .reg-hrs, .ot-hrs').forEach(input => {
-            input.addEventListener('input', calculateTotals);
-            input.addEventListener('change', calculateTotals);
-        });
-    }
-
-    function removeDayRow(btn) {
-        const row = btn.closest('tr');
-        row.remove();
-        calculateTotals();
-    }
-
-    function calculateTotals() {
-        let otherPayTotal = 0, regHrsTotal = 0, otHrsTotal = 0;
-        document.querySelectorAll('.other-pay').forEach(input => { otherPayTotal += parseFloat(input.value) || 0; });
-        document.querySelectorAll('.reg-hrs').forEach(input => { regHrsTotal += parseFloat(input.value) || 0; });
-        document.querySelectorAll('.ot-hrs').forEach(input => { otHrsTotal += parseFloat(input.value) || 0; });
-
-        document.getElementById('totalOtherPay').textContent = otherPayTotal.toFixed(2);
-        document.getElementById('totalRegHrs').textContent = regHrsTotal.toFixed(1);
-        document.getElementById('totalOtHrs').textContent = otHrsTotal.toFixed(1);
-    }
-
-    // -------------------------
-    // PDF generation
-    // -------------------------
-    async function saveAsPDF() {
-        // Wait a tiny bit to allow dynamic script loading from head to finish
-        await new Promise(resolve => setTimeout(resolve, DYNAMIC_JS_CHECK_WAIT));
-
-        if (typeof window.jspdf === 'undefined') {
-            // jsPDF didn't load (common when opened via file:// on iOS). Provide helpful guidance.
-            const wants = confirm("PDF library (jsPDF) not loaded. For offline PDF support, download 'jspdf.umd.min.js' and place it next to this HTML file, or open this page in Safari (if on iPhone). Click OK to open instructions page.");
-            if (wants) {
-                // Provide inline instructions via a new small window with steps
-                const helpWin = window.open('', '_blank');
-                helpWin.document.write('<h3>How to enable PDF generation</h3>');
-                helpWin.document.write('<ol>');
-                helpWin.document.write('<li>Download <strong>jspdf.umd.min.js</strong> from a trusted CDN (search "jspdf 2.5.1 jspdf.umd.min.js")</li>');
-                helpWin.document.write('<li>Place the file in the same folder as this HTML file and rename it <code>jspdf.umd.min.js</code></li>');
-                helpWin.document.write('<li>Reload this page in your browser. The Save as PDF button will work offline.</li>');
-                helpWin.document.write('</ol>');
-                helpWin.document.close();
+        function updateTypedSignature() {
+            const typedName = document.getElementById('typedSignature').value;
+            const display = document.getElementById('typedSignatureDisplay');
+            display.textContent = typedName;
+            // If typing, clear the canvas signature
+            if (typedName && ctx && canvas) {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
             }
-            return null;
         }
 
-        try {
-            const { jsPDF } = window.jspdf;
-            const pdf = new jsPDF({ orientation:'portrait', unit:'mm', format:'a4' });
-            let y = 15;
-            pdf.setFontSize(16);
-            pdf.setFont(undefined, 'bold');
-            pdf.text('QUANTUM WEEKLY TIME CARD', 105, y, { align: 'center' });
-            y += 10;
-            pdf.setLineWidth(0.5);
-            pdf.line(15, y, 195, y);
-            y += 8;
+        function clearTypedSignature() {
+            document.getElementById('typedSignature').value = '';
+            document.getElementById('typedSignatureDisplay').textContent = '';
+        }
 
-            pdf.setFontSize(10);
-            pdf.setFont(undefined, 'bold');
-            pdf.text('EMPLOYEE NUMBER:', 15, y);
-            pdf.setFont(undefined, 'normal');
-            pdf.text(document.getElementById('employeeNumber').value || '', 60, y);
-            y += 6;
-
-            pdf.setFont(undefined, 'bold');
-            pdf.text('NAME:', 15, y);
-            pdf.setFont(undefined, 'normal');
-            pdf.text(document.getElementById('employeeName').value || '', 60, y);
-            y += 6;
-
-            pdf.setFont(undefined, 'bold');
-            pdf.text('WEEK ENDING:', 15, y);
-            pdf.setFont(undefined, 'normal');
-            pdf.text(document.getElementById('weekEnding').value || '', 60, y);
-            y += 8;
-
-            pdf.setFontSize(9);
-            const compVehicle = document.querySelector('input[name="companyVehicle"]:checked') ? document.querySelector('input[name="companyVehicle"]:checked').value : 'no';
-            pdf.text('Did you Drive a Company Vehicle for the Period?  [' + (compVehicle === 'yes' ? 'X' : ' ') + '] Yes  [' + (compVehicle === 'no' ? 'X' : ' ') + '] No', 15, y);
-            y += 5;
-            pdf.text('Vehicle #: ' + (document.getElementById('vehicleNumber').value || ''), 15, y);
-            y += 5;
-            const vehicleHome = document.querySelector('input[name="vehicleHome"]:checked') ? document.querySelector('input[name="vehicleHome"]:checked').value : 'no';
-            pdf.text('Did you Drive a Co. Vehicle Home for the Period?  [' + (vehicleHome === 'yes' ? 'X' : ' ') + '] Yes  [' + (vehicleHome === 'no' ? 'X' : ' ') + '] No', 15, y);
-            y += 5;
-            const onCall = document.querySelector('input[name="onCall"]:checked') ? document.querySelector('input[name="onCall"]:checked').value : 'no';
-            pdf.text('Were you on Call During the Period?  [' + (onCall === 'yes' ? 'X' : ' ') + '] Yes  [' + (onCall === 'no' ? 'X' : ' ') + '] No', 15, y);
-            y += 8;
-
-            // Table header
-            const startX = 15;
-            const colWidths = [12,30,18,15,12,12,15,15,15,15];
-            const rowHeight = 8;
-            pdf.setFontSize(7);
-            pdf.setFont(undefined, 'bold');
-            const headers = ['DAY','JOB DESC','TICKET #','OTHER PAY','REG HRS','OT HRS','CLOCK IN','LUNCH OUT','LUNCH IN','CLOCK OUT'];
-            let x = startX;
-            headers.forEach((h,i) => { pdf.rect(x, y, colWidths[i], rowHeight); pdf.text(h, x + colWidths[i]/2, y + 5, { align: 'center' }); x += colWidths[i]; });
-            y += rowHeight;
-
-            // Data rows
-            pdf.setFont(undefined, 'normal');
-            const allRows = Array.from(document.querySelectorAll('#timeTableBody tr:not(.totals-row)'));
-            const days = ['Mon','Tues','Wed','Thurs','Fri','Sat','Sun'];
-            days.forEach(day => {
-                const dayRows = allRows.filter(r => r.getAttribute('data-day') === day);
-                dayRows.forEach((row,index) => {
-                    x = startX;
-                    pdf.rect(x, y, colWidths[0], rowHeight);
-                    pdf.text(index === 0 ? day : '', x + colWidths[0]/2, y + 5, { align:'center' });
-                    x += colWidths[0];
-
-                    const job = row.querySelector('.job-desc') ? row.querySelector('.job-desc').value || '' : '';
-                    pdf.rect(x, y, colWidths[1], rowHeight); pdf.text(job.substring(0,15), x+2, y+5); x += colWidths[1];
-
-                    pdf.rect(x, y, colWidths[2], rowHeight); pdf.text(row.querySelector('.ticket')?row.querySelector('.ticket').value||'':'' , x+2, y+5); x += colWidths[2];
-
-                    pdf.rect(x, y, colWidths[3], rowHeight); pdf.text(row.querySelector('.other-pay')?row.querySelector('.other-pay').value||'':'' , x + colWidths[3]/2, y+5, {align:'center'}); x+= colWidths[3];
-
-                    pdf.rect(x, y, colWidths[4], rowHeight); pdf.text(row.querySelector('.reg-hrs')?row.querySelector('.reg-hrs').value||'':'' , x + colWidths[4]/2, y+5, {align:'center'}); x+= colWidths[4];
-
-                    pdf.rect(x, y, colWidths[5], rowHeight); pdf.text(row.querySelector('.ot-hrs')?row.querySelector('.ot-hrs').value||'':'' , x + colWidths[5]/2, y+5, {align:'center'}); x+= colWidths[5];
-
-                    pdf.rect(x, y, colWidths[6], rowHeight); pdf.text(row.querySelector('.clock-in')?row.querySelector('.clock-in').value||'':'' , x + colWidths[6]/2, y+5, {align:'center'}); x+= colWidths[6];
-
-                    pdf.rect(x, y, colWidths[7], rowHeight); pdf.text(row.querySelector('.lunch-out')?row.querySelector('.lunch-out').value||'':'' , x + colWidths[7]/2, y+5, {align:'center'}); x+= colWidths[7];
-
-                    pdf.rect(x, y, colWidths[8], rowHeight); pdf.text(row.querySelector('.lunch-in')?row.querySelector('.lunch-in').value||'':'' , x + colWidths[8]/2, y+5, {align:'center'}); x+= colWidths[8];
-
-                    pdf.rect(x, y, colWidths[9], rowHeight); pdf.text(row.querySelector('.clock-out')?row.querySelector('.clock-out').value||'':'' , x + colWidths[9]/2, y+5, {align:'center'});
-
-                    y += rowHeight;
-                    // If nearing bottom of page, add a new page
-                    if (y > 270) { pdf.addPage(); y = 15; }
-                });
+        // Add row for specific day
+        function addDayRow(day) {
+            const tbody = document.getElementById('timeTableBody');
+            const totalsRow = tbody.querySelector('.totals-row');
+            
+            // Find the last row for this day
+            const dayRows = Array.from(tbody.querySelectorAll('tr[data-day="' + day + '"]'));
+            const lastDayRow = dayRows[dayRows.length - 1];
+            
+            // Create new row
+            const newRow = document.createElement('tr');
+            newRow.setAttribute('data-day', day);
+            newRow.classList.add('additional-row');
+            newRow.innerHTML = `
+                <td class="day-cell"><button class="remove-row-btn" onclick="removeDayRow(this)">−</button></td>
+                <td><input type="text" class="job-desc" placeholder="Job"></td>
+                <td><input type="text" class="ticket" placeholder="Ticket"></td>
+                <td><input type="number" class="other-pay" step="0.01" placeholder="0.00"></td>
+                <td><input type="number" class="reg-hrs" step="0.5" placeholder="0.0"></td>
+                <td><input type="number" class="ot-hrs" step="0.5" placeholder="0.0"></td>
+                <td><input type="time" class="clock-in"></td>
+                <td><input type="time" class="lunch-out"></td>
+                <td><input type="time" class="lunch-in"></td>
+                <td><input type="time" class="clock-out"></td>
+            `;
+            
+            // Insert after the last row for this day
+            lastDayRow.parentNode.insertBefore(newRow, lastDayRow.nextSibling);
+            
+            // Add event listeners for totals
+            newRow.querySelectorAll('.other-pay, .reg-hrs, .ot-hrs').forEach(input => {
+                input.addEventListener('input', calculateTotals);
+                input.addEventListener('change', calculateTotals);
             });
+        }
 
-            // Totals row
-            x = startX;
-            pdf.setFont(undefined, 'bold');
-            pdf.setFillColor(255,250,205);
-            pdf.rect(x, y, colWidths[0]+colWidths[1]+colWidths[2], rowHeight, 'F');
-            pdf.rect(x, y, colWidths[0]+colWidths[1]+colWidths[2], rowHeight, 'S');
-            pdf.text('TOTALS', x + 20, y+5);
-            x += colWidths[0]+colWidths[1]+colWidths[2];
+        // Remove day row
+        function removeDayRow(btn) {
+            const row = btn.closest('tr');
+            row.remove();
+            calculateTotals();
+        }
 
-            pdf.setFillColor(255,250,205);
-            pdf.rect(x, y, colWidths[3], rowHeight, 'F'); pdf.rect(x, y, colWidths[3], rowHeight, 'S');
-            pdf.text(document.getElementById('totalOtherPay').textContent, x + colWidths[3]/2, y+5, {align:'center'}); x += colWidths[3];
+        // Calculate totals
+        function calculateTotals() {
+            let otherPayTotal = 0;
+            let regHrsTotal = 0;
+            let otHrsTotal = 0;
+            
+            document.querySelectorAll('.other-pay').forEach(input => {
+                otherPayTotal += parseFloat(input.value) || 0;
+            });
+            
+            document.querySelectorAll('.reg-hrs').forEach(input => {
+                regHrsTotal += parseFloat(input.value) || 0;
+            });
+            
+            document.querySelectorAll('.ot-hrs').forEach(input => {
+                otHrsTotal += parseFloat(input.value) || 0;
+            });
+            
+            document.getElementById('totalOtherPay').textContent = otherPayTotal.toFixed(2);
+            document.getElementById('totalRegHrs').textContent = regHrsTotal.toFixed(1);
+            document.getElementById('totalOtHrs').textContent = otHrsTotal.toFixed(1);
+        }
 
-            pdf.setFillColor(255,250,205);
-            pdf.rect(x, y, colWidths[4], rowHeight, 'F'); pdf.rect(x, y, colWidths[4], rowHeight, 'S');
-            pdf.text(document.getElementById('totalRegHrs').textContent, x + colWidths[4]/2, y+5, {align:'center'}); x += colWidths[4];
-
-            pdf.setFillColor(255,250,205);
-            pdf.rect(x, y, colWidths[5], rowHeight, 'F'); pdf.rect(x, y, colWidths[5], rowHeight, 'S');
-            pdf.text(document.getElementById('totalOtHrs').textContent, x + colWidths[5]/2, y+5, {align:'center'}); x += colWidths[5];
-
-            for (let i = 6; i < 10; i++) { pdf.rect(x, y, colWidths[i], rowHeight); x += colWidths[i]; }
-            y += rowHeight + 5;
-
-            // Signature box
-            pdf.setFont(undefined, 'bold');
-            pdf.setFontSize(10);
-            pdf.text('Employee Signature', 15, y);
-            y += 5;
-            pdf.setLineWidth(0.3);
-            pdf.rect(15, y, 120, 40);
-
-            // If typed signature exists, render it using a temporary canvas
-            const typedSig = document.getElementById('typedSignature').value;
-            if (typedSig) {
-                const tempCanvas = document.createElement('canvas');
-                tempCanvas.width = 600;
-                tempCanvas.height = 200;
-                const tctx = tempCanvas.getContext('2d');
-                tctx.fillStyle = '#fff';
-                tctx.fillRect(0,0,tempCanvas.width,tempCanvas.height);
-                tctx.fillStyle = '#000';
-                tctx.font = 'italic bold 80px Georgia, serif';
-                tctx.textAlign = 'center';
-                tctx.textBaseline = 'middle';
-                tctx.save();
-                tctx.transform(1,0,-0.2,1,0,0);
-                tctx.fillText(typedSig, tempCanvas.width/2 + 30, tempCanvas.height/2);
-                tctx.restore();
-                const sigData = tempCanvas.toDataURL('image/png');
-                pdf.addImage(sigData, 'PNG', 15, y, 120, 40);
-            } else if (canvas) {
-                try {
+        // Save as PDF - Build it properly from scratch
+        async function saveAsPDF() {
+            const { jsPDF } = window.jspdf;
+            
+            try {
+                const pdf = new jsPDF({
+                    orientation: 'portrait',
+                    unit: 'mm',
+                    format: 'a4'
+                });
+                
+                let y = 15;
+                
+                // Header
+                pdf.setFontSize(16);
+                pdf.setFont(undefined, 'bold');
+                pdf.text('QUANTUM WEEKLY TIME CARD', 105, y, { align: 'center' });
+                y += 10;
+                
+                // Line under header
+                pdf.setLineWidth(0.5);
+                pdf.line(15, y, 195, y);
+                y += 8;
+                
+                // Employee info
+                pdf.setFontSize(10);
+                pdf.setFont(undefined, 'bold');
+                pdf.text('EMPLOYEE NUMBER:', 15, y);
+                pdf.setFont(undefined, 'normal');
+                pdf.text(document.getElementById('employeeNumber').value || '', 60, y);
+                y += 6;
+                
+                pdf.setFont(undefined, 'bold');
+                pdf.text('NAME:', 15, y);
+                pdf.setFont(undefined, 'normal');
+                pdf.text(document.getElementById('employeeName').value || '', 60, y);
+                y += 6;
+                
+                pdf.setFont(undefined, 'bold');
+                pdf.text('WEEK ENDING:', 15, y);
+                pdf.setFont(undefined, 'normal');
+                pdf.text(document.getElementById('weekEnding').value || '', 60, y);
+                y += 8;
+                
+                // Vehicle questions
+                pdf.setFontSize(9);
+                const compVehicle = document.querySelector('input[name="companyVehicle"]:checked').value;
+                pdf.text('Did you Drive a Company Vehicle for the Period?  [' + (compVehicle === 'yes' ? 'X' : ' ') + '] Yes  [' + (compVehicle === 'no' ? 'X' : ' ') + '] No', 15, y);
+                y += 5;
+                
+                pdf.text('Vehicle #: ' + (document.getElementById('vehicleNumber').value || ''), 15, y);
+                y += 5;
+                
+                const vehicleHome = document.querySelector('input[name="vehicleHome"]:checked').value;
+                pdf.text('Did you Drive a Co. Vehicle Home for the Period?  [' + (vehicleHome === 'yes' ? 'X' : ' ') + '] Yes  [' + (vehicleHome === 'no' ? 'X' : ' ') + '] No', 15, y);
+                y += 5;
+                
+                const onCall = document.querySelector('input[name="onCall"]:checked').value;
+                pdf.text('Were you on Call During the Period?  [' + (onCall === 'yes' ? 'X' : ' ') + '] Yes  [' + (onCall === 'no' ? 'X' : ' ') + '] No', 15, y);
+                y += 8;
+                
+                // Table
+                const startX = 15;
+                const colWidths = [12, 30, 18, 15, 12, 12, 15, 15, 15, 15];
+                const rowHeight = 8;
+                
+                // Table headers
+                pdf.setFontSize(7);
+                pdf.setFont(undefined, 'bold');
+                const headers = ['DAY', 'JOB DESC', 'TICKET #', 'OTHER PAY', 'REG HRS', 'OT HRS', 'CLOCK IN', 'LUNCH OUT', 'LUNCH IN', 'CLOCK OUT'];
+                let x = startX;
+                headers.forEach((header, i) => {
+                    pdf.rect(x, y, colWidths[i], rowHeight);
+                    pdf.text(header, x + colWidths[i]/2, y + 5, { align: 'center' });
+                    x += colWidths[i];
+                });
+                y += rowHeight;
+                
+                // Data rows
+                pdf.setFont(undefined, 'normal');
+                const allRows = document.querySelectorAll('#timeTableBody tr:not(.totals-row)');
+                const days = ['Mon', 'Tues', 'Wed', 'Thurs', 'Fri', 'Sat', 'Sun'];
+                
+                days.forEach(day => {
+                    const dayRows = Array.from(allRows).filter(row => row.getAttribute('data-day') === day);
+                    
+                    dayRows.forEach((row, index) => {
+                        x = startX;
+                        
+                        // Day
+                        pdf.rect(x, y, colWidths[0], rowHeight);
+                        pdf.text(index === 0 ? day : '', x + colWidths[0]/2, y + 5, { align: 'center' });
+                        x += colWidths[0];
+                        
+                        // Job Description
+                        pdf.rect(x, y, colWidths[1], rowHeight);
+                        const job = row.querySelector('.job-desc').value || '';
+                        pdf.text(job.substring(0, 15), x + 2, y + 5);
+                        x += colWidths[1];
+                        
+                        // Ticket
+                        pdf.rect(x, y, colWidths[2], rowHeight);
+                        pdf.text(row.querySelector('.ticket').value || '', x + 2, y + 5);
+                        x += colWidths[2];
+                        
+                        // Other Pay
+                        pdf.rect(x, y, colWidths[3], rowHeight);
+                        pdf.text(row.querySelector('.other-pay').value || '', x + colWidths[3]/2, y + 5, { align: 'center' });
+                        x += colWidths[3];
+                        
+                        // Reg Hrs
+                        pdf.rect(x, y, colWidths[4], rowHeight);
+                        pdf.text(row.querySelector('.reg-hrs').value || '', x + colWidths[4]/2, y + 5, { align: 'center' });
+                        x += colWidths[4];
+                        
+                        // OT Hrs
+                        pdf.rect(x, y, colWidths[5], rowHeight);
+                        pdf.text(row.querySelector('.ot-hrs').value || '', x + colWidths[5]/2, y + 5, { align: 'center' });
+                        x += colWidths[5];
+                        
+                        // Clock In
+                        pdf.rect(x, y, colWidths[6], rowHeight);
+                        pdf.text(row.querySelector('.clock-in').value || '', x + colWidths[6]/2, y + 5, { align: 'center' });
+                        x += colWidths[6];
+                        
+                        // Lunch Out
+                        pdf.rect(x, y, colWidths[7], rowHeight);
+                        pdf.text(row.querySelector('.lunch-out').value || '', x + colWidths[7]/2, y + 5, { align: 'center' });
+                        x += colWidths[7];
+                        
+                        // Lunch In
+                        pdf.rect(x, y, colWidths[8], rowHeight);
+                        pdf.text(row.querySelector('.lunch-in').value || '', x + colWidths[8]/2, y + 5, { align: 'center' });
+                        x += colWidths[8];
+                        
+                        // Clock Out
+                        pdf.rect(x, y, colWidths[9], rowHeight);
+                        pdf.text(row.querySelector('.clock-out').value || '', x + colWidths[9]/2, y + 5, { align: 'center' });
+                        
+                        y += rowHeight;
+                    });
+                });
+                
+                // Totals row
+                x = startX;
+                pdf.setFont(undefined, 'bold');
+                
+                // Yellow background for totals label
+                pdf.setFillColor(255, 250, 205);
+                pdf.rect(x, y, colWidths[0] + colWidths[1] + colWidths[2], rowHeight, 'F');
+                pdf.setDrawColor(0);
+                pdf.rect(x, y, colWidths[0] + colWidths[1] + colWidths[2], rowHeight, 'S');
+                pdf.text('TOTALS', x + 20, y + 5);
+                x += colWidths[0] + colWidths[1] + colWidths[2];
+                
+                // Yellow background for total other pay
+                pdf.setFillColor(255, 250, 205);
+                pdf.rect(x, y, colWidths[3], rowHeight, 'F');
+                pdf.rect(x, y, colWidths[3], rowHeight, 'S');
+                pdf.text(document.getElementById('totalOtherPay').textContent, x + colWidths[3]/2, y + 5, { align: 'center' });
+                x += colWidths[3];
+                
+                // Yellow background for total reg hrs
+                pdf.setFillColor(255, 250, 205);
+                pdf.rect(x, y, colWidths[4], rowHeight, 'F');
+                pdf.rect(x, y, colWidths[4], rowHeight, 'S');
+                pdf.text(document.getElementById('totalRegHrs').textContent, x + colWidths[4]/2, y + 5, { align: 'center' });
+                x += colWidths[4];
+                
+                // Yellow background for total ot hrs
+                pdf.setFillColor(255, 250, 205);
+                pdf.rect(x, y, colWidths[5], rowHeight, 'F');
+                pdf.rect(x, y, colWidths[5], rowHeight, 'S');
+                pdf.text(document.getElementById('totalOtHrs').textContent, x + colWidths[5]/2, y + 5, { align: 'center' });
+                x += colWidths[5];
+                
+                // White cells for time columns (no yellow)
+                pdf.setFillColor(255, 255, 255);
+                for (let i = 6; i < 10; i++) {
+                    pdf.rect(x, y, colWidths[i], rowHeight, 'F');
+                    pdf.rect(x, y, colWidths[i], rowHeight, 'S');
+                    x += colWidths[i];
+                }
+                y += rowHeight + 5;
+                
+                // Signature
+                pdf.setFont(undefined, 'bold');
+                pdf.setFontSize(10);
+                pdf.text('Employee Signature', 15, y);
+                y += 5;
+                
+                pdf.setLineWidth(0.3);
+                pdf.rect(15, y, 120, 40);
+                
+                // Check for typed signature first
+                const typedSig = document.getElementById('typedSignature').value;
+                if (typedSig) {
+                    // Capture the typed signature display with html2canvas to preserve cursive font
+                    const sigContainer = document.querySelector('.signature-container');
+                    const sigCanvas = await html2canvas(sigContainer, {
+                        scale: 2,
+                        backgroundColor: '#ffffff',
+                        logging: false
+                    });
+                    const sigData = sigCanvas.toDataURL('image/png');
+                    pdf.addImage(sigData, 'PNG', 15, y, 120, 40);
+                } else if (canvas) {
+                    // Add drawn signature from canvas
                     const sigData = canvas.toDataURL('image/png');
                     pdf.addImage(sigData, 'PNG', 15, y, 120, 40);
-                } catch (err) {
-                    console.warn('Could not add drawn signature to PDF:', err);
                 }
+                y += 45;
+                
+                pdf.setFont(undefined, 'normal');
+                pdf.setFontSize(9);
+                pdf.text('Date: ' + (document.getElementById('signatureDate').value || ''), 15, y);
+                y += 8;
+                
+                // Acknowledgment
+                pdf.setFontSize(7);
+                pdf.text('I acknowledge that I will be taxed on the value of my commute for the personal use of the company vehicle per IRS pub 15B.', 15, y, { maxWidth: 180 });
+                
+                // Save
+                const fileName = 'quantum_time_' + (document.getElementById('weekEnding').value || 'timecard') + '.pdf';
+                pdf.save(fileName);
+                
+                alert('PDF saved successfully!');
+                return fileName;
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error generating PDF: ' + error.message);
+                return null;
             }
-            y += 45;
-            pdf.setFont(undefined, 'normal');
-            pdf.setFontSize(9);
-            pdf.text('Date: ' + (document.getElementById('signatureDate').value || ''), 15, y);
-            y += 8;
-            pdf.setFontSize(7);
-            pdf.text('I acknowledge that I will be taxed on the value of my commute for the personal use of the company vehicle per IRS pub 15B.', 15, y, { maxWidth: 180 });
-
-            const fileName = 'quantum_time_' + (document.getElementById('weekEnding').value || 'timecard') + '.pdf';
-            pdf.save(fileName);
-            alert('PDF saved: ' + fileName);
-            return fileName;
-        } catch (error) {
-            console.error('PDF generation error:', error);
-            alert('Error generating PDF: ' + (error && error.message ? error.message : error));
-            return null;
         }
-    }
 
-    // -------------------------
-    // Email sharing
-    // -------------------------
-    async function shareViaEmail() {
-        const fileName = await saveAsPDF();
-        if (!fileName) return;
-        setTimeout(() => {
-            const name = document.getElementById('employeeName').value || 'Employee';
-            const weekEnd = document.getElementById('weekEnding').value || '[Week Ending Date]';
-            const subject = encodeURIComponent('Time Card - ' + name + ' - Week Ending ' + weekEnd);
-            const body = encodeURIComponent('Please see my attached time card.\n\nFILE LOCATION:\nYour Downloads folder\nFile name: ' + fileName + '\n\nTo attach: 1) Tap the attachment button (📎) in your email 2) Go to Downloads or Recent Files 3) Select: ' + fileName + '\n\nEmployee: ' + name + '\nWeek Ending: ' + weekEnd);
-            window.location.href = 'mailto:?subject=' + subject + '&body=' + body;
-        }, 500);
-    }
+        // Share via email
+        async function shareViaEmail() {
+            // Generate PDF first
+            const fileName = await saveAsPDF();
+            
+            if (!fileName) return; // PDF generation failed
+            
+            // Wait a moment for download to start
+            setTimeout(() => {
+                const name = document.getElementById('employeeName').value || 'Employee';
+                const weekEnd = document.getElementById('weekEnding').value || '[Week Ending Date]';
+                
+                const subject = encodeURIComponent('Time Card - ' + name + ' - Week Ending ' + weekEnd);
+                
+                const body = encodeURIComponent(
+                    'Please see my attached time card.\n\n' +
+                    'FILE LOCATION:\n' +
+                    'Your Downloads folder\n' +
+                    'File name: ' + fileName + '\n\n' +
+                    'To attach:\n' +
+                    '1. Tap the attachment button (📎) in your email\n' +
+                    '2. Go to Downloads or Recent Files\n' +
+                    '3. Select: ' + fileName + '\n' +
+                    '4. Send!\n\n' +
+                    'Employee: ' + name + '\n' +
+                    'Week Ending: ' + weekEnd
+                );
+                
+                window.location.href = 'mailto:?subject=' + subject + '&body=' + body;
+            }, 1000);
+        }
 
-    // -------------------------
-    // Templates (localStorage)
-    // -------------------------
-    let templates = [];
+        // Templates
+        let templates = [];
 
-    function loadTemplates() {
-        if (!supportsLocalStorage()) return;
-        try {
-            const saved = localStorage.getItem('qtimeTemplates');
-            if (saved) {
-                templates = JSON.parse(saved);
-                displayTemplates();
+        function loadTemplates() {
+            try {
+                const saved = localStorage.getItem('qtimeTemplates');
+                if (saved) {
+                    templates = JSON.parse(saved);
+                    displayTemplates();
+                }
+            } catch (e) {
+                console.log('Could not load templates');
             }
-        } catch (e) { console.warn('Could not load templates', e); }
-    }
+        }
 
-    function showSaveTemplate() { document.getElementById('templateModal').classList.add('show'); document.getElementById('templateName').value = ''; }
-    function closeTemplateModal(){ document.getElementById('templateModal').classList.remove('show'); }
+        function showSaveTemplate() {
+            document.getElementById('templateModal').classList.add('show');
+            document.getElementById('templateName').value = '';
+        }
 
-    function captureFormData() {
-        const data = {
-            employeeNumber: document.getElementById('employeeNumber').value,
-            employeeName: document.getElementById('employeeName').value,
-            companyVehicle: document.querySelector('input[name="companyVehicle"]:checked') ? document.querySelector('input[name="companyVehicle"]:checked').value : 'no',
-            vehicleNumber: document.getElementById('vehicleNumber').value,
-            vehicleHome: document.querySelector('input[name="vehicleHome"]:checked') ? document.querySelector('input[name="vehicleHome"]:checked').value : 'no',
-            onCall: document.querySelector('input[name="onCall"]:checked') ? document.querySelector('input[name="onCall"]:checked').value : 'no',
-            signature: (canvas ? (function(){ try{return canvas.toDataURL(); } catch(e){ return null; } })() : null),
-            typedSignature: document.getElementById('typedSignature').value,
-            rows: []
-        };
+        function closeTemplateModal() {
+            document.getElementById('templateModal').classList.remove('show');
+        }
 
-        const allRows = document.querySelectorAll('#timeTableBody tr:not(.totals-row)');
-        allRows.forEach(row => {
-            data.rows.push({
-                day: row.getAttribute('data-day'),
-                isAdditional: row.classList.contains('additional-row'),
-                jobDesc: row.querySelector('.job-desc') ? row.querySelector('.job-desc').value : '',
-                ticket: row.querySelector('.ticket') ? row.querySelector('.ticket').value : '',
-                otherPay: row.querySelector('.other-pay') ? row.querySelector('.other-pay').value : '',
-                regHrs: row.querySelector('.reg-hrs') ? row.querySelector('.reg-hrs').value : '',
-                otHrs: row.querySelector('.ot-hrs') ? row.querySelector('.ot-hrs').value : '',
-                clockIn: row.querySelector('.clock-in') ? row.querySelector('.clock-in').value : '',
-                lunchOut: row.querySelector('.lunch-out') ? row.querySelector('.lunch-out').value : '',
-                lunchIn: row.querySelector('.lunch-in') ? row.querySelector('.lunch-in').value : '',
-                clockOut: row.querySelector('.clock-out') ? row.querySelector('.clock-out').value : ''
+        function confirmSaveTemplate() {
+            const name = document.getElementById('templateName').value.trim();
+            if (!name) {
+                alert('Please enter a template name');
+                return;
+            }
+            
+            const template = {
+                id: Date.now(),
+                name: name,
+                data: captureFormData()
+            };
+            
+            templates.push(template);
+            try {
+                localStorage.setItem('qtimeTemplates', JSON.stringify(templates));
+            } catch (e) {
+                alert('Could not save template');
+            }
+            displayTemplates();
+            closeTemplateModal();
+            alert('Template saved!');
+        }
+
+        function captureFormData() {
+            const data = {
+                employeeNumber: document.getElementById('employeeNumber').value,
+                employeeName: document.getElementById('employeeName').value,
+                companyVehicle: document.querySelector('input[name="companyVehicle"]:checked').value,
+                vehicleNumber: document.getElementById('vehicleNumber').value,
+                vehicleHome: document.querySelector('input[name="vehicleHome"]:checked').value,
+                onCall: document.querySelector('input[name="onCall"]:checked').value,
+                signature: canvas ? canvas.toDataURL() : null,
+                typedSignature: document.getElementById('typedSignature').value,
+                rows: []
+            };
+            
+            // Capture all rows including additional ones
+            const allRows = document.querySelectorAll('#timeTableBody tr:not(.totals-row)');
+            allRows.forEach(row => {
+                const day = row.getAttribute('data-day');
+                const isAdditional = row.classList.contains('additional-row');
+                
+                data.rows.push({
+                    day: day,
+                    isAdditional: isAdditional,
+                    jobDesc: row.querySelector('.job-desc').value,
+                    ticket: row.querySelector('.ticket').value,
+                    otherPay: row.querySelector('.other-pay').value,
+                    regHrs: row.querySelector('.reg-hrs').value,
+                    otHrs: row.querySelector('.ot-hrs').value,
+                    clockIn: row.querySelector('.clock-in').value,
+                    lunchOut: row.querySelector('.lunch-out').value,
+                    lunchIn: row.querySelector('.lunch-in').value,
+                    clockOut: row.querySelector('.clock-out').value
+                });
             });
-        });
-
-        return data;
-    }
-
-    function confirmSaveTemplate() {
-        const name = document.getElementById('templateName').value.trim();
-        if (!name) { alert('Please enter a template name'); return; }
-        const template = { id: Date.now(), name: name, data: captureFormData() };
-        templates.push(template);
-        try { localStorage.setItem('qtimeTemplates', JSON.stringify(templates)); } catch (e) { alert('Could not save template: ' + e); }
-        displayTemplates(); closeTemplateModal(); alert('Template saved!');
-    }
-
-    function loadTemplate(id) {
-        const template = templates.find(t => t.id === id);
-        if (!template) return;
-        const data = template.data;
-        document.getElementById('employeeNumber').value = data.employeeNumber || '';
-        document.getElementById('employeeName').value = data.employeeName || '';
-        document.getElementById('vehicleNumber').value = data.vehicleNumber || '';
-        if (data.companyVehicle) document.querySelector('input[name="companyVehicle"][value="' + data.companyVehicle + '"]').checked = true;
-        if (data.vehicleHome) document.querySelector('input[name="vehicleHome"][value="' + data.vehicleHome + '"]').checked = true;
-        if (data.onCall) document.querySelector('input[name="onCall"][value="' + data.onCall + '"]').checked = true;
-
-        if (data.signature && canvas && ctx) {
-            const img = new Image();
-            img.onload = function() { ctx.clearRect(0,0,canvas.width,canvas.height); ctx.drawImage(img, 0, 0); };
-            img.src = data.signature;
+            
+            return data;
         }
-        if (data.typedSignature) { document.getElementById('typedSignature').value = data.typedSignature; updateTypedSignature(); }
 
-        // Remove extra rows then fill
-        document.querySelectorAll('#timeTableBody tr.additional-row').forEach(r => r.remove());
-        if (data.rows && data.rows.length) {
+        function loadTemplate(id) {
+            const template = templates.find(t => t.id === id);
+            if (!template) return;
+            
+            const data = template.data;
+            
+            // Load basic fields (NOT week ending, NOT signature date)
+            document.getElementById('employeeNumber').value = data.employeeNumber || '';
+            document.getElementById('employeeName').value = data.employeeName || '';
+            document.getElementById('vehicleNumber').value = data.vehicleNumber || '';
+            
+            // Load vehicle checkboxes
+            if (data.companyVehicle) {
+                document.querySelector('input[name="companyVehicle"][value="' + data.companyVehicle + '"]').checked = true;
+            }
+            if (data.vehicleHome) {
+                document.querySelector('input[name="vehicleHome"][value="' + data.vehicleHome + '"]').checked = true;
+            }
+            if (data.onCall) {
+                document.querySelector('input[name="onCall"][value="' + data.onCall + '"]').checked = true;
+            }
+            
+            // Load signature (but NOT signature date)
+            if (data.signature && canvas && ctx) {
+                const img = new Image();
+                img.onload = function() {
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    ctx.drawImage(img, 0, 0);
+                };
+                img.src = data.signature;
+            }
+            
+            // Load typed signature
+            if (data.typedSignature) {
+                document.getElementById('typedSignature').value = data.typedSignature;
+                updateTypedSignature();
+            }
+            
+            // Clear all existing additional rows first
+            document.querySelectorAll('#timeTableBody tr.additional-row').forEach(row => row.remove());
+            
+            // Load all rows with ALL time fields
+            if (data.rows && data.rows.length > 0) {
+                // First, clear all base rows
+                document.querySelectorAll('#timeTableBody tr:not(.totals-row):not(.additional-row)').forEach(row => {
+                    row.querySelector('.job-desc').value = '';
+                    row.querySelector('.ticket').value = '';
+                    row.querySelector('.other-pay').value = '';
+                    row.querySelector('.reg-hrs').value = '';
+                    row.querySelector('.ot-hrs').value = '';
+                    row.querySelector('.clock-in').value = '';
+                    row.querySelector('.lunch-out').value = '';
+                    row.querySelector('.lunch-in').value = '';
+                    row.querySelector('.clock-out').value = '';
+                });
+                
+                data.rows.forEach((rowData) => {
+                    const day = rowData.day;
+                    
+                    if (rowData.isAdditional) {
+                        // This is an additional row, create it
+                        addDayRow(day);
+                        // Get the newly created row
+                        const dayRows = Array.from(document.querySelectorAll('tr[data-day="' + day + '"]'));
+                        const newRow = dayRows[dayRows.length - 1];
+                        
+                        // Fill it with ALL data including times
+                        newRow.querySelector('.job-desc').value = rowData.jobDesc || '';
+                        newRow.querySelector('.ticket').value = rowData.ticket || '';
+                        newRow.querySelector('.other-pay').value = rowData.otherPay || '';
+                        newRow.querySelector('.reg-hrs').value = rowData.regHrs || '';
+                        newRow.querySelector('.ot-hrs').value = rowData.otHrs || '';
+                        newRow.querySelector('.clock-in').value = rowData.clockIn || '';
+                        newRow.querySelector('.lunch-out').value = rowData.lunchOut || '';
+                        newRow.querySelector('.lunch-in').value = rowData.lunchIn || '';
+                        newRow.querySelector('.clock-out').value = rowData.clockOut || '';
+                    } else {
+                        // This is a base row
+                        const baseRow = document.querySelector('tr[data-day="' + day + '"]:not(.additional-row)');
+                        if (baseRow) {
+                            baseRow.querySelector('.job-desc').value = rowData.jobDesc || '';
+                            baseRow.querySelector('.ticket').value = rowData.ticket || '';
+                            baseRow.querySelector('.other-pay').value = rowData.otherPay || '';
+                            baseRow.querySelector('.reg-hrs').value = rowData.regHrs || '';
+                            baseRow.querySelector('.ot-hrs').value = rowData.otHrs || '';
+                            baseRow.querySelector('.clock-in').value = rowData.clockIn || '';
+                            baseRow.querySelector('.lunch-out').value = rowData.lunchOut || '';
+                            baseRow.querySelector('.lunch-in').value = rowData.lunchIn || '';
+                            baseRow.querySelector('.clock-out').value = rowData.clockOut || '';
+                        }
+                    }
+                });
+            }
+            
+            calculateTotals();
+            alert('Template loaded!');
+        }
+
+        function deleteTemplate(id) {
+            if (!confirm('Delete this template?')) return;
+            
+            templates = templates.filter(t => t.id !== id);
+            try {
+                localStorage.setItem('qtimeTemplates', JSON.stringify(templates));
+            } catch (e) {}
+            displayTemplates();
+        }
+
+        function displayTemplates() {
+            const container = document.getElementById('templateList');
+            const section = document.getElementById('templateSection');
+            
+            if (templates.length === 0) {
+                section.style.display = 'none';
+                return;
+            }
+            
+            section.style.display = 'block';
+            container.innerHTML = templates.map(template => 
+                '<div class="template-item"><span>' + template.name + '</span><div>' +
+                '<button class="btn-secondary" onclick="loadTemplate(' + template.id + ')" style="margin-right: 5px;">Load</button>' +
+                '<button class="btn-danger" onclick="deleteTemplate(' + template.id + ')">Delete</button>' +
+                '</div></div>'
+            ).join('');
+        }
+
+        function clearAll() {
+            if (!confirm('Clear all data?')) return;
+            
+            document.getElementById('employeeNumber').value = '';
+            document.getElementById('employeeName').value = '';
+            document.getElementById('weekEnding').value = '';
+            document.getElementById('vehicleNumber').value = '';
+            document.getElementById('signatureDate').value = '';
+            document.querySelector('input[name="companyVehicle"][value="no"]').checked = true;
+            document.querySelector('input[name="vehicleHome"][value="no"]').checked = true;
+            document.querySelector('input[name="onCall"][value="no"]').checked = true;
+            
+            // Remove all additional rows
+            document.querySelectorAll('#timeTableBody tr.additional-row').forEach(row => row.remove());
+            
+            // Clear all main day rows
             document.querySelectorAll('#timeTableBody tr:not(.totals-row):not(.additional-row)').forEach(row => {
                 row.querySelector('.job-desc').value = '';
                 row.querySelector('.ticket').value = '';
@@ -820,106 +1297,25 @@
                 row.querySelector('.lunch-in').value = '';
                 row.querySelector('.clock-out').value = '';
             });
-            data.rows.forEach(rowData => {
-                const day = rowData.day;
-                if (rowData.isAdditional) {
-                    addDayRow(day);
-                    const dayRows = Array.from(document.querySelectorAll('tr[data-day="' + day + '"]'));
-                    const newRow = dayRows[dayRows.length - 1];
-                    newRow.querySelector('.job-desc').value = rowData.jobDesc || '';
-                    newRow.querySelector('.ticket').value = rowData.ticket || '';
-                    newRow.querySelector('.other-pay').value = rowData.otherPay || '';
-                    newRow.querySelector('.reg-hrs').value = rowData.regHrs || '';
-                    newRow.querySelector('.ot-hrs').value = rowData.otHrs || '';
-                    newRow.querySelector('.clock-in').value = rowData.clockIn || '';
-                    newRow.querySelector('.lunch-out').value = rowData.lunchOut || '';
-                    newRow.querySelector('.lunch-in').value = rowData.lunchIn || '';
-                    newRow.querySelector('.clock-out').value = rowData.clockOut || '';
-                } else {
-                    const baseRow = document.querySelector('tr[data-day="' + day + '"]:not(.additional-row)');
-                    if (baseRow) {
-                        baseRow.querySelector('.job-desc').value = rowData.jobDesc || '';
-                        baseRow.querySelector('.ticket').value = rowData.ticket || '';
-                        baseRow.querySelector('.other-pay').value = rowData.otherPay || '';
-                        baseRow.querySelector('.reg-hrs').value = rowData.regHrs || '';
-                        baseRow.querySelector('.ot-hrs').value = rowData.otHrs || '';
-                        baseRow.querySelector('.clock-in').value = rowData.clockIn || '';
-                        baseRow.querySelector('.lunch-out').value = rowData.lunchOut || '';
-                        baseRow.querySelector('.lunch-in').value = rowData.lunchIn || '';
-                        baseRow.querySelector('.clock-out').value = rowData.clockOut || '';
-                    }
-                }
-            });
+            
+            clearSignature();
+            clearTypedSignature();
+            calculateTotals();
         }
-        calculateTotals();
-        alert('Template loaded!');
-    }
 
-    function deleteTemplate(id) {
-        if (!confirm('Delete this template?')) return;
-        templates = templates.filter(t => t.id !== id);
-        try { localStorage.setItem('qtimeTemplates', JSON.stringify(templates)); } catch (e) {}
-        displayTemplates();
-    }
-
-    function displayTemplates() {
-        const container = document.getElementById('templateList');
-        const section = document.getElementById('templateSection');
-        if (templates.length === 0) { section.style.display = 'none'; return; }
-        section.style.display = 'block';
-        container.innerHTML = templates.map(t => '<div class="template-item"><span>' + t.name + '</span><div>' +
-            '<button class="btn-secondary" onclick="loadTemplate(' + t.id + '); return false;" style="margin-right:5px;">Load</button>' +
-            '<button class="btn-danger" onclick="deleteTemplate(' + t.id + '); return false;">Delete</button>' +
-            '</div></div>'
-        ).join('');
-    }
-
-    function clearAll() {
-        if (!confirm('Clear all data?')) return;
-        document.getElementById('employeeNumber').value = '';
-        document.getElementById('employeeName').value = '';
-        document.getElementById('weekEnding').value = '';
-        document.getElementById('vehicleNumber').value = '';
-        document.getElementById('signatureDate').value = '';
-        try {
-            document.querySelector('input[name="companyVehicle"][value="no"]').checked = true;
-            document.querySelector('input[name="vehicleHome"][value="no"]').checked = true;
-            document.querySelector('input[name="onCall"][value="no"]').checked = true;
-        } catch (e) {}
-        document.querySelectorAll('#timeTableBody tr.additional-row').forEach(row => row.remove());
-        document.querySelectorAll('#timeTableBody tr:not(.totals-row):not(.additional-row)').forEach(row => {
-            try {
-                row.querySelector('.job-desc').value = '';
-                row.querySelector('.ticket').value = '';
-                row.querySelector('.other-pay').value = '';
-                row.querySelector('.reg-hrs').value = '';
-                row.querySelector('.ot-hrs').value = '';
-                row.querySelector('.clock-in').value = '';
-                row.querySelector('.lunch-out').value = '';
-                row.querySelector('.lunch-in').value = '';
-                row.querySelector('.clock-out').value = '';
-            } catch (e) {}
-        });
-        clearSignature();
-        clearTypedSignature();
-        calculateTotals();
-    }
-
-    // -------------------------
-    // Init
-    // -------------------------
-    window.addEventListener('load', function() {
-        // Small delay to ensure dynamic scripts are injected on mobile
-        setTimeout(function() {
+        // Initialize
+        window.addEventListener('load', function() {
             setupSignatureCanvas();
             loadTemplates();
+            
+            // Add change listeners
             document.querySelectorAll('.other-pay, .reg-hrs, .ot-hrs').forEach(input => {
                 input.addEventListener('input', calculateTotals);
                 input.addEventListener('change', calculateTotals);
             });
+            
             calculateTotals();
-        }, 100);
-    });
+        });
     </script>
 </body>
 </html>
