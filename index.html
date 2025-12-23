@@ -15,7 +15,6 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;600;700&display=swap" rel="stylesheet">
     
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     
     <style>
@@ -134,10 +133,13 @@
             padding: 0;
             line-height: 1;
             flex-shrink: 0;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
         }
 
         .add-row-btn:active {
             background: #45a049;
+            transform: scale(0.95);
         }
 
         .remove-row-btn {
@@ -155,10 +157,13 @@
             justify-content: center;
             padding: 0;
             line-height: 1;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
         }
 
         .remove-row-btn:active {
             background: #da190b;
+            transform: scale(0.95);
         }
 
         .additional-row .day-cell {
@@ -227,6 +232,9 @@
             font-weight: bold;
             cursor: pointer;
             -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            touch-action: manipulation;
         }
 
         .btn-primary {
@@ -311,7 +319,7 @@
             background: white;
             touch-action: none;
             position: relative;
-            width: 110%;
+            width: 100%;
             height: 120px;
             overflow: hidden;
             -webkit-user-select: none;
@@ -333,7 +341,6 @@
             position: fixed;
             width: 100%;
         }
-        #signatureCanvas { width: 180px !important; height: 40px !important; image-rendering: crisp-edges; }
 
         .modal {
             display: none;
@@ -391,7 +398,6 @@
                 padding: 2px;
             }
         }
-        #signatureCanvas { width: 180px !important; height: 40px !important; image-rendering: crisp-edges; }
     </style>
 </head>
 <body>
@@ -454,6 +460,7 @@
                             <th>OTHER PAY</th>
                             <th>REG HRS</th>
                             <th>OT HRS</th>
+                            <th>DBL HRS</th>
                             <th>CLOCK IN</th>
                             <th>LUNCH OUT</th>
                             <th>LUNCH IN</th>
@@ -462,84 +469,91 @@
                     </thead>
                     <tbody id="timeTableBody">
                         <tr data-day="Mon">
-                            <td class="day-cell"><div class="day-cell-content"><span>Mon</span><button class="add-row-btn" onclick="addDayRow('Mon')">+</button></div></td>
+                            <td class="day-cell"><div class="day-cell-content"><span>Mon</span><button class="add-row-btn" onclick="addDayRow('Mon'); return false;">+</button></div></td>
                             <td><input type="text" class="job-desc" placeholder="Job"></td>
                             <td><input type="text" class="ticket" placeholder="Ticket"></td>
                             <td><input type="number" class="other-pay" step="0.01" placeholder="0.00"></td>
                             <td><input type="number" class="reg-hrs" step="0.5" placeholder="0.0"></td>
                             <td><input type="number" class="ot-hrs" step="0.5" placeholder="0.0"></td>
+                            <td><input type="number" class="dbl-hrs" step="0.5" placeholder="0.0"></td>
                             <td><input type="time" class="clock-in"></td>
                             <td><input type="time" class="lunch-out"></td>
                             <td><input type="time" class="lunch-in"></td>
                             <td><input type="time" class="clock-out"></td>
                         </tr>
                         <tr data-day="Tues">
-                            <td class="day-cell"><div class="day-cell-content"><span>Tues</span><button class="add-row-btn" onclick="addDayRow('Tues')">+</button></div></td>
+                            <td class="day-cell"><div class="day-cell-content"><span>Tues</span><button class="add-row-btn" onclick="addDayRow('Tues'); return false;">+</button></div></td>
                             <td><input type="text" class="job-desc" placeholder="Job"></td>
                             <td><input type="text" class="ticket" placeholder="Ticket"></td>
                             <td><input type="number" class="other-pay" step="0.01" placeholder="0.00"></td>
                             <td><input type="number" class="reg-hrs" step="0.5" placeholder="0.0"></td>
                             <td><input type="number" class="ot-hrs" step="0.5" placeholder="0.0"></td>
+                            <td><input type="number" class="dbl-hrs" step="0.5" placeholder="0.0"></td>
                             <td><input type="time" class="clock-in"></td>
                             <td><input type="time" class="lunch-out"></td>
                             <td><input type="time" class="lunch-in"></td>
                             <td><input type="time" class="clock-out"></td>
                         </tr>
                         <tr data-day="Wed">
-                            <td class="day-cell"><div class="day-cell-content"><span>Wed</span><button class="add-row-btn" onclick="addDayRow('Wed')">+</button></div></td>
+                            <td class="day-cell"><div class="day-cell-content"><span>Wed</span><button class="add-row-btn" onclick="addDayRow('Wed'); return false;">+</button></div></td>
                             <td><input type="text" class="job-desc" placeholder="Job"></td>
                             <td><input type="text" class="ticket" placeholder="Ticket"></td>
                             <td><input type="number" class="other-pay" step="0.01" placeholder="0.00"></td>
                             <td><input type="number" class="reg-hrs" step="0.5" placeholder="0.0"></td>
                             <td><input type="number" class="ot-hrs" step="0.5" placeholder="0.0"></td>
+                            <td><input type="number" class="dbl-hrs" step="0.5" placeholder="0.0"></td>
                             <td><input type="time" class="clock-in"></td>
                             <td><input type="time" class="lunch-out"></td>
                             <td><input type="time" class="lunch-in"></td>
                             <td><input type="time" class="clock-out"></td>
                         </tr>
                         <tr data-day="Thurs">
-                            <td class="day-cell"><div class="day-cell-content"><span>Thurs</span><button class="add-row-btn" onclick="addDayRow('Thurs')">+</button></div></td>
+                            <td class="day-cell"><div class="day-cell-content"><span>Thurs</span><button class="add-row-btn" onclick="addDayRow('Thurs'); return false;">+</button></div></td>
                             <td><input type="text" class="job-desc" placeholder="Job"></td>
                             <td><input type="text" class="ticket" placeholder="Ticket"></td>
                             <td><input type="number" class="other-pay" step="0.01" placeholder="0.00"></td>
                             <td><input type="number" class="reg-hrs" step="0.5" placeholder="0.0"></td>
                             <td><input type="number" class="ot-hrs" step="0.5" placeholder="0.0"></td>
+                            <td><input type="number" class="dbl-hrs" step="0.5" placeholder="0.0"></td>
                             <td><input type="time" class="clock-in"></td>
                             <td><input type="time" class="lunch-out"></td>
                             <td><input type="time" class="lunch-in"></td>
                             <td><input type="time" class="clock-out"></td>
                         </tr>
                         <tr data-day="Fri">
-                            <td class="day-cell"><div class="day-cell-content"><span>Fri</span><button class="add-row-btn" onclick="addDayRow('Fri')">+</button></div></td>
+                            <td class="day-cell"><div class="day-cell-content"><span>Fri</span><button class="add-row-btn" onclick="addDayRow('Fri'); return false;">+</button></div></td>
                             <td><input type="text" class="job-desc" placeholder="Job"></td>
                             <td><input type="text" class="ticket" placeholder="Ticket"></td>
                             <td><input type="number" class="other-pay" step="0.01" placeholder="0.00"></td>
                             <td><input type="number" class="reg-hrs" step="0.5" placeholder="0.0"></td>
                             <td><input type="number" class="ot-hrs" step="0.5" placeholder="0.0"></td>
+                            <td><input type="number" class="dbl-hrs" step="0.5" placeholder="0.0"></td>
                             <td><input type="time" class="clock-in"></td>
                             <td><input type="time" class="lunch-out"></td>
                             <td><input type="time" class="lunch-in"></td>
                             <td><input type="time" class="clock-out"></td>
                         </tr>
                         <tr data-day="Sat">
-                            <td class="day-cell"><div class="day-cell-content"><span>Sat</span><button class="add-row-btn" onclick="addDayRow('Sat')">+</button></div></td>
+                            <td class="day-cell"><div class="day-cell-content"><span>Sat</span><button class="add-row-btn" onclick="addDayRow('Sat'); return false;">+</button></div></td>
                             <td><input type="text" class="job-desc" placeholder="Job"></td>
                             <td><input type="text" class="ticket" placeholder="Ticket"></td>
                             <td><input type="number" class="other-pay" step="0.01" placeholder="0.00"></td>
                             <td><input type="number" class="reg-hrs" step="0.5" placeholder="0.0"></td>
                             <td><input type="number" class="ot-hrs" step="0.5" placeholder="0.0"></td>
+                            <td><input type="number" class="dbl-hrs" step="0.5" placeholder="0.0"></td>
                             <td><input type="time" class="clock-in"></td>
                             <td><input type="time" class="lunch-out"></td>
                             <td><input type="time" class="lunch-in"></td>
                             <td><input type="time" class="clock-out"></td>
                         </tr>
                         <tr data-day="Sun">
-                            <td class="day-cell"><div class="day-cell-content"><span>Sun</span><button class="add-row-btn" onclick="addDayRow('Sun')">+</button></div></td>
+                            <td class="day-cell"><div class="day-cell-content"><span>Sun</span><button class="add-row-btn" onclick="addDayRow('Sun'); return false;">+</button></div></td>
                             <td><input type="text" class="job-desc" placeholder="Job"></td>
                             <td><input type="text" class="ticket" placeholder="Ticket"></td>
                             <td><input type="number" class="other-pay" step="0.01" placeholder="0.00"></td>
                             <td><input type="number" class="reg-hrs" step="0.5" placeholder="0.0"></td>
                             <td><input type="number" class="ot-hrs" step="0.5" placeholder="0.0"></td>
+                            <td><input type="number" class="dbl-hrs" step="0.5" placeholder="0.0"></td>
                             <td><input type="time" class="clock-in"></td>
                             <td><input type="time" class="lunch-out"></td>
                             <td><input type="time" class="lunch-in"></td>
@@ -550,6 +564,7 @@
                             <td id="totalOtherPay">0.00</td>
                             <td id="totalRegHrs">0.0</td>
                             <td id="totalOtHrs">0.0</td>
+                            <td id="totalDblHrs">0.0</td>
                             <td colspan="4"></td>
                         </tr>
                     </tbody>
@@ -561,18 +576,18 @@
                 <div style="margin-bottom: 10px;">
                     <label style="font-size: 11px; margin-right: 10px;">Type Name:</label>
                     <input type="text" id="typedSignature" placeholder="Type your full name" 
-                           style="padding: 8px; border: 1px solid #ccc; border-radius: 4px; width: 250px;"
-                           oninput="updateTypedSignature()">
-                    <button onclick="clearTypedSignature()" style="padding: 8px 12px; font-size: 11px; margin-left: 5px;" class="btn-secondary">Clear</button>
+                           style="padding: 8px; border: 1px solid #ccc; border-radius: 4px; width: 250px; max-width: 100%;"
+                           oninput="updateTypedSignature()" onchange="updateTypedSignature()" onkeyup="updateTypedSignature()">
+                    <button onclick="clearTypedSignature(); return false;" style="padding: 8px 12px; font-size: 11px; margin-left: 5px;" class="btn-secondary">Clear</button>
                 </div>
                 <div class="signature-container">
                     <canvas id="signatureCanvas"></canvas>
                     <div id="typedSignatureDisplay" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); 
                          font-family: 'Dancing Script', 'Brush Script MT', 'Lucida Handwriting', cursive; font-size: 56px; color: #000; 
-                         font-weight: 600; pointer-events: none; white-space: nowrap;"></div>
+                         font-weight: 600; pointer-events: none; white-space: nowrap; z-index: 10; width: 100%; text-align: center;"></div>
                 </div>
                 <div style="display: flex; gap: 10px; margin-top: 10px;">
-                    <button class="btn-secondary" onclick="clearSignature()" style="padding: 8px 16px; font-size: 12px;">Clear Canvas</button>
+                    <button class="btn-secondary" onclick="clearSignature(); return false;" style="padding: 8px 16px; font-size: 12px;">Clear Canvas</button>
                     <input type="date" id="signatureDate" placeholder="Date" style="padding: 8px; border: 1px solid #ccc; border-radius: 4px; flex: 1;">
                 </div>
             </div>
@@ -583,10 +598,10 @@
         </div>
 
         <div class="buttons-container">
-            <button class="btn-primary" onclick="saveAsPDF()">📄 Save as PDF</button>
-            <button class="btn-secondary" onclick="shareViaEmail()">✉️ Email</button>
-            <button class="btn-warning" onclick="showSaveTemplate()">💾 Save Template</button>
-            <button class="btn-danger" onclick="clearAll()">🗑️ Clear All</button>
+            <button class="btn-primary" onclick="saveAsPDF(); return false;">📄 Save as PDF</button>
+            <button class="btn-secondary" onclick="shareViaEmail(); return false;">✉️ Email</button>
+            <button class="btn-warning" onclick="showSaveTemplate(); return false;">💾 Save Template</button>
+            <button class="btn-danger" onclick="clearAll(); return false;">🗑️ Clear All</button>
         </div>
 
         <div id="templateSection" class="template-section" style="display: none;">
@@ -600,8 +615,8 @@
             <h3>Save as Template</h3>
             <input type="text" id="templateName" placeholder="Enter template name">
             <div class="modal-buttons">
-                <button class="btn-primary" onclick="confirmSaveTemplate()">Save</button>
-                <button class="btn-danger" onclick="closeTemplateModal()">Cancel</button>
+                <button class="btn-primary" onclick="confirmSaveTemplate(); return false;">Save</button>
+                <button class="btn-danger" onclick="closeTemplateModal(); return false;">Cancel</button>
             </div>
         </div>
     </div>
@@ -615,7 +630,10 @@
 
         function setupSignatureCanvas() {
             canvas = document.getElementById('signatureCanvas');
-            if (!canvas) return;
+            if (!canvas) {
+                console.error('Signature canvas not found');
+                return;
+            }
             
             ctx = canvas.getContext('2d');
             
@@ -623,19 +641,29 @@
             canvas.width = container.offsetWidth;
             canvas.height = container.offsetHeight;
             
+            // Ensure canvas has actual dimensions
+            if (canvas.width === 0 || canvas.height === 0) {
+                canvas.width = 400;
+                canvas.height = 120;
+            }
+            
             ctx.strokeStyle = '#000';
             ctx.lineWidth = 2;
             ctx.lineCap = 'round';
             ctx.lineJoin = 'round';
             
+            // Desktop events
             canvas.addEventListener('mousedown', startDrawing);
             canvas.addEventListener('mousemove', draw);
             canvas.addEventListener('mouseup', stopDrawing);
             canvas.addEventListener('mouseout', stopDrawing);
             
+            // Mobile touch events - very important for iPhone
             canvas.addEventListener('touchstart', handleTouchStart, {passive: false});
             canvas.addEventListener('touchmove', handleTouchMove, {passive: false});
             canvas.addEventListener('touchend', handleTouchEnd, {passive: false});
+            
+            console.log('Signature canvas initialized:', canvas.width, 'x', canvas.height);
         }
 
         function startDrawing(e) {
@@ -742,12 +770,13 @@
             newRow.setAttribute('data-day', day);
             newRow.classList.add('additional-row');
             newRow.innerHTML = `
-                <td class="day-cell"><button class="remove-row-btn" onclick="removeDayRow(this)">−</button></td>
+                <td class="day-cell"><button class="remove-row-btn" onclick="removeDayRow(this); return false;">−</button></td>
                 <td><input type="text" class="job-desc" placeholder="Job"></td>
                 <td><input type="text" class="ticket" placeholder="Ticket"></td>
                 <td><input type="number" class="other-pay" step="0.01" placeholder="0.00"></td>
                 <td><input type="number" class="reg-hrs" step="0.5" placeholder="0.0"></td>
                 <td><input type="number" class="ot-hrs" step="0.5" placeholder="0.0"></td>
+                <td><input type="number" class="dbl-hrs" step="0.5" placeholder="0.0"></td>
                 <td><input type="time" class="clock-in"></td>
                 <td><input type="time" class="lunch-out"></td>
                 <td><input type="time" class="lunch-in"></td>
@@ -758,7 +787,7 @@
             lastDayRow.parentNode.insertBefore(newRow, lastDayRow.nextSibling);
             
             // Add event listeners for totals
-            newRow.querySelectorAll('.other-pay, .reg-hrs, .ot-hrs').forEach(input => {
+            newRow.querySelectorAll('.other-pay, .reg-hrs, .ot-hrs, .dbl-hrs').forEach(input => {
                 input.addEventListener('input', calculateTotals);
                 input.addEventListener('change', calculateTotals);
             });
@@ -776,6 +805,7 @@
             let otherPayTotal = 0;
             let regHrsTotal = 0;
             let otHrsTotal = 0;
+            let dblHrsTotal = 0;
             
             document.querySelectorAll('.other-pay').forEach(input => {
                 otherPayTotal += parseFloat(input.value) || 0;
@@ -789,13 +819,24 @@
                 otHrsTotal += parseFloat(input.value) || 0;
             });
             
+            document.querySelectorAll('.dbl-hrs').forEach(input => {
+                dblHrsTotal += parseFloat(input.value) || 0;
+            });
+            
             document.getElementById('totalOtherPay').textContent = otherPayTotal.toFixed(2);
             document.getElementById('totalRegHrs').textContent = regHrsTotal.toFixed(1);
             document.getElementById('totalOtHrs').textContent = otHrsTotal.toFixed(1);
+            document.getElementById('totalDblHrs').textContent = dblHrsTotal.toFixed(1);
         }
 
         // Save as PDF - Build it properly from scratch
         async function saveAsPDF() {
+            // Check if jsPDF loaded
+            if (typeof window.jspdf === 'undefined') {
+                alert('PDF library not loaded. Make sure you have internet connection when opening this file for the first time.');
+                return null;
+            }
+            
             const { jsPDF } = window.jspdf;
             
             try {
@@ -857,13 +898,13 @@
                 
                 // Table
                 const startX = 15;
-                const colWidths = [12, 30, 18, 15, 12, 12, 15, 15, 15, 15];
+                const colWidths = [12, 28, 16, 14, 11, 11, 11, 14, 14, 14, 14];
                 const rowHeight = 8;
                 
                 // Table headers
                 pdf.setFontSize(7);
                 pdf.setFont(undefined, 'bold');
-                const headers = ['DAY', 'JOB DESC', 'TICKET #', 'OTHER PAY', 'REG HRS', 'OT HRS', 'CLOCK IN', 'LUNCH OUT', 'LUNCH IN', 'CLOCK OUT'];
+                const headers = ['DAY', 'JOB DESC', 'TICKET #', 'OTHER PAY', 'REG HRS', 'OT HRS', 'DBL HRS', 'CLOCK IN', 'LUNCH OUT', 'LUNCH IN', 'CLOCK OUT'];
                 let x = startX;
                 headers.forEach((header, i) => {
                     pdf.rect(x, y, colWidths[i], rowHeight);
@@ -914,24 +955,29 @@
                         pdf.text(row.querySelector('.ot-hrs').value || '', x + colWidths[5]/2, y + 5, { align: 'center' });
                         x += colWidths[5];
                         
-                        // Clock In
+                        // DBL Hrs
                         pdf.rect(x, y, colWidths[6], rowHeight);
-                        pdf.text(row.querySelector('.clock-in').value || '', x + colWidths[6]/2, y + 5, { align: 'center' });
+                        pdf.text(row.querySelector('.dbl-hrs').value || '', x + colWidths[6]/2, y + 5, { align: 'center' });
                         x += colWidths[6];
                         
-                        // Lunch Out
+                        // Clock In
                         pdf.rect(x, y, colWidths[7], rowHeight);
-                        pdf.text(row.querySelector('.lunch-out').value || '', x + colWidths[7]/2, y + 5, { align: 'center' });
+                        pdf.text(row.querySelector('.clock-in').value || '', x + colWidths[7]/2, y + 5, { align: 'center' });
                         x += colWidths[7];
                         
-                        // Lunch In
+                        // Lunch Out
                         pdf.rect(x, y, colWidths[8], rowHeight);
-                        pdf.text(row.querySelector('.lunch-in').value || '', x + colWidths[8]/2, y + 5, { align: 'center' });
+                        pdf.text(row.querySelector('.lunch-out').value || '', x + colWidths[8]/2, y + 5, { align: 'center' });
                         x += colWidths[8];
                         
-                        // Clock Out
+                        // Lunch In
                         pdf.rect(x, y, colWidths[9], rowHeight);
-                        pdf.text(row.querySelector('.clock-out').value || '', x + colWidths[9]/2, y + 5, { align: 'center' });
+                        pdf.text(row.querySelector('.lunch-in').value || '', x + colWidths[9]/2, y + 5, { align: 'center' });
+                        x += colWidths[9];
+                        
+                        // Clock Out
+                        pdf.rect(x, y, colWidths[10], rowHeight);
+                        pdf.text(row.querySelector('.clock-out').value || '', x + colWidths[10]/2, y + 5, { align: 'center' });
                         
                         y += rowHeight;
                     });
@@ -970,9 +1016,16 @@
                 pdf.text(document.getElementById('totalOtHrs').textContent, x + colWidths[5]/2, y + 5, { align: 'center' });
                 x += colWidths[5];
                 
+                // Yellow background for total dbl hrs
+                pdf.setFillColor(255, 250, 205);
+                pdf.rect(x, y, colWidths[6], rowHeight, 'F');
+                pdf.rect(x, y, colWidths[6], rowHeight, 'S');
+                pdf.text(document.getElementById('totalDblHrs').textContent, x + colWidths[6]/2, y + 5, { align: 'center' });
+                x += colWidths[6];
+                
                 // White cells for time columns (no yellow)
                 pdf.setFillColor(255, 255, 255);
-                for (let i = 6; i < 10; i++) {
+                for (let i = 7; i < 11; i++) {
                     pdf.rect(x, y, colWidths[i], rowHeight, 'F');
                     pdf.rect(x, y, colWidths[i], rowHeight, 'S');
                     x += colWidths[i];
@@ -991,14 +1044,27 @@
                 // Check for typed signature first
                 const typedSig = document.getElementById('typedSignature').value;
                 if (typedSig) {
-                    // Capture the typed signature display with html2canvas to preserve cursive font
-                    const sigContainer = document.querySelector('.signature-container');
-                    const sigCanvas = await html2canvas(sigContainer, {
-                        scale: 2,
-                        backgroundColor: '#ffffff',
-                        logging: false
-                    });
-                    const sigData = sigCanvas.toDataURL('image/png');
+                    // Draw typed signature on temporary canvas
+                    const tempCanvas = document.createElement('canvas');
+                    tempCanvas.width = 600;
+                    tempCanvas.height = 200;
+                    const tempCtx = tempCanvas.getContext('2d');
+                    
+                    tempCtx.fillStyle = '#ffffff';
+                    tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+                    
+                    tempCtx.fillStyle = '#000000';
+                    tempCtx.font = 'italic bold 80px Georgia, serif';
+                    tempCtx.textAlign = 'center';
+                    tempCtx.textBaseline = 'middle';
+                    
+                    // Add slight skew for cursive effect
+                    tempCtx.save();
+                    tempCtx.transform(1, 0, -0.2, 1, 0, 0);
+                    tempCtx.fillText(typedSig, tempCanvas.width / 2 + 30, tempCanvas.height / 2);
+                    tempCtx.restore();
+                    
+                    const sigData = tempCanvas.toDataURL('image/png');
                     pdf.addImage(sigData, 'PNG', 15, y, 120, 40);
                 } else if (canvas) {
                     // Add drawn signature from canvas
@@ -1136,6 +1202,7 @@
                     otherPay: row.querySelector('.other-pay').value,
                     regHrs: row.querySelector('.reg-hrs').value,
                     otHrs: row.querySelector('.ot-hrs').value,
+                    dblHrs: row.querySelector('.dbl-hrs').value,
                     clockIn: row.querySelector('.clock-in').value,
                     lunchOut: row.querySelector('.lunch-out').value,
                     lunchIn: row.querySelector('.lunch-in').value,
@@ -1196,6 +1263,7 @@
                     row.querySelector('.other-pay').value = '';
                     row.querySelector('.reg-hrs').value = '';
                     row.querySelector('.ot-hrs').value = '';
+                    row.querySelector('.dbl-hrs').value = '';
                     row.querySelector('.clock-in').value = '';
                     row.querySelector('.lunch-out').value = '';
                     row.querySelector('.lunch-in').value = '';
@@ -1218,6 +1286,7 @@
                         newRow.querySelector('.other-pay').value = rowData.otherPay || '';
                         newRow.querySelector('.reg-hrs').value = rowData.regHrs || '';
                         newRow.querySelector('.ot-hrs').value = rowData.otHrs || '';
+                        newRow.querySelector('.dbl-hrs').value = rowData.dblHrs || '';
                         newRow.querySelector('.clock-in').value = rowData.clockIn || '';
                         newRow.querySelector('.lunch-out').value = rowData.lunchOut || '';
                         newRow.querySelector('.lunch-in').value = rowData.lunchIn || '';
@@ -1231,6 +1300,7 @@
                             baseRow.querySelector('.other-pay').value = rowData.otherPay || '';
                             baseRow.querySelector('.reg-hrs').value = rowData.regHrs || '';
                             baseRow.querySelector('.ot-hrs').value = rowData.otHrs || '';
+                            baseRow.querySelector('.dbl-hrs').value = rowData.dblHrs || '';
                             baseRow.querySelector('.clock-in').value = rowData.clockIn || '';
                             baseRow.querySelector('.lunch-out').value = rowData.lunchOut || '';
                             baseRow.querySelector('.lunch-in').value = rowData.lunchIn || '';
@@ -1266,8 +1336,8 @@
             section.style.display = 'block';
             container.innerHTML = templates.map(template => 
                 '<div class="template-item"><span>' + template.name + '</span><div>' +
-                '<button class="btn-secondary" onclick="loadTemplate(' + template.id + ')" style="margin-right: 5px;">Load</button>' +
-                '<button class="btn-danger" onclick="deleteTemplate(' + template.id + ')">Delete</button>' +
+                '<button class="btn-secondary" onclick="loadTemplate(' + template.id + '); return false;" style="margin-right: 5px;">Load</button>' +
+                '<button class="btn-danger" onclick="deleteTemplate(' + template.id + '); return false;">Delete</button>' +
                 '</div></div>'
             ).join('');
         }
@@ -1294,6 +1364,7 @@
                 row.querySelector('.other-pay').value = '';
                 row.querySelector('.reg-hrs').value = '';
                 row.querySelector('.ot-hrs').value = '';
+                row.querySelector('.dbl-hrs').value = '';
                 row.querySelector('.clock-in').value = '';
                 row.querySelector('.lunch-out').value = '';
                 row.querySelector('.lunch-in').value = '';
@@ -1307,16 +1378,19 @@
 
         // Initialize
         window.addEventListener('load', function() {
-            setupSignatureCanvas();
-            loadTemplates();
-            
-            // Add change listeners
-            document.querySelectorAll('.other-pay, .reg-hrs, .ot-hrs').forEach(input => {
-                input.addEventListener('input', calculateTotals);
-                input.addEventListener('change', calculateTotals);
-            });
-            
-            calculateTotals();
+            // Small delay to ensure everything is loaded on mobile
+            setTimeout(function() {
+                setupSignatureCanvas();
+                loadTemplates();
+                
+                // Add change listeners
+                document.querySelectorAll('.other-pay, .reg-hrs, .ot-hrs, .dbl-hrs').forEach(input => {
+                    input.addEventListener('input', calculateTotals);
+                    input.addEventListener('change', calculateTotals);
+                });
+                
+                calculateTotals();
+            }, 100);
         });
     </script>
 </body>
